@@ -4,14 +4,29 @@ A local, family-scoped advisor workflow: ingest an event, assess its relevance, 
 
 The product frontend from `origin/feat/ui-front` is now connected to this local backend on the integration branch `codex/local-setup`. Open [the application](http://127.0.0.1:3000/app/); [operational diagnostics](http://127.0.0.1:3000/ops) remain available separately. The existing frontend layout and visual design are retained. Integration history and implementation boundaries are recorded in [INTEGRATION.md](INTEGRATION.md).
 
+## Hackathon submission
+
+**Complete integrated version: [`codex/local-setup`](https://github.com/arnauquest/CDTM_VLC_HACKS26/tree/codex/local-setup).** The separate `feat/ui-front` branch is the original frontend workspace.
+
+- [Demo video — 2:35, 1080p, with narration and real browser conversation audio](deliverables/sherpas-demo.mp4) (use **View raw / Download raw file** if GitHub does not show a player).
+- [Final pitch deck](deliverables/Sherpas-Pitch-Final.pptx): starts with a blank background; the next advance shows the phone notification with embedded sound. The final personalized voice clip is also embedded.
+- [Two-speaker script](deliverables/Speaker-script.txt).
+- [Demo runbook, actual results and editing disclosures](DEMO.md).
+
+The demo uses the four official synthetic families. External news is simulated and labelled; provider calls, decisions, human voice transcription, Gemini acoustic observations and stored follow-ups are real. API keys, local sessions, databases and raw recordings are intentionally excluded.
+
 ## Run locally
 
 Use Node.js 22.13 or newer. The backend uses Node's built-in SQLite and has no npm package dependencies.
 
 ```sh
-cd /Users/paulasantaballalison/Desktop/Toni/proyecto/CDTM_VLC_HACKS26
+git clone --branch codex/local-setup https://github.com/arnauquest/CDTM_VLC_HACKS26.git
+cd CDTM_VLC_HACKS26
+git clone https://github.com/SherpasEngineering/hackathon-cdtm-vlc-hacks-2026.git ../sherpas-official-cases
 # Preserve an existing .env:
 test -f .env || cp .env.example .env
+# In .env, set SHERPAS_CASES_DIR=../sherpas-official-cases/cases
+# Configure your provider credentials and authenticated Codex CLI (CODEX_BIN).
 # Fill the local configuration without committing credentials.
 npm start
 ```

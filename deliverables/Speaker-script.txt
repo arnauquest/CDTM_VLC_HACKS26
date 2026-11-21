@@ -1,0 +1,64 @@
+GUION FINAL — SHERPAS
+Objetivo: 2:48; margen hasta 3:00. 256 palabras humanas + 15,88 segundos de audio.
+Persona 1: apertura y cierre. Persona 2: proceso y negocio.
+Los tiempos son objetivos de ensayo. Audio: pulsar reproducir una vez en la diapositiva 6; no hablar encima.
+
+Persona 1 — Diapositiva 1 — 0:00–0:24
+
+Market alert!
+
+Imagine being Samantha. This tells you what happened, but not what it means for your children.
+
+One advisor looks after more than one hundred families.
+
+We automate the preparation, so every family can receive personal attention.
+
+Persona 2 — Diapositiva 2 — 0:24–0:46
+
+A market move, a family update, or a date in the plan starts the process.
+
+The system checks each family: does this matter to them?
+
+It selects relevant cases and explains why. Sometimes, the right decision is no contact.
+
+Persona 2 — Diapositiva 3 — 0:46–1:23
+
+An agent reviews the family’s goals, facts and preferences. It updates records, prepares a conversation, or schedules a review.
+
+Before a call, it prepares likely questions and clear limits.
+
+For this challenge, every message needs advisor approval. Routine drafts can be reviewed together; sensitive cases get individual attention.
+
+The advisor reviews a prepared decision instead of starting from scratch.
+
+Persona 2 — Diapositiva 4 — 1:23–1:53
+
+After the call, we keep what Samantha actually says separate from tentative observations about her voice.
+
+If she asks for shorter explanations and a follow-up in five days, the system remembers and schedules it.
+
+Before contacting her again, it checks whether that follow-up is still useful.
+
+Personalization means listening, adapting, and being there again.
+
+Persona 2 — Diapositiva 5 — 1:53–2:13
+
+Our prototype works across four families.
+
+For advisory firms, we propose a subscription per advisor, plus voice usage.
+
+The value: less preparation and follow-up work, with lightweight screening and parallel workflows supporting growth.
+
+Audio ElevenLabs — Diapositiva 6 — 2:13–2:29
+
+Hi Samantha, I’m your advisor’s virtual assistant. Today’s market news can feel unsettling. Let’s focus on what matters to you: Ethan and Ava’s college plans, and your home goal for 2030. We’ll take it one step at a time. What’s worrying you most?
+
+Persona 1 — Diapositiva 6 — 2:29–2:48
+
+Same market shock. Same Samantha. A more personal conversation.
+
+She hears her children’s names, her goals, and an invitation to talk.
+
+Less time preparing. More time caring.
+
+First to know. First to care.
