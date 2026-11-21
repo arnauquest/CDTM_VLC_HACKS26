@@ -12,9 +12,9 @@ export function mountVoice(host, { onUpdate = () => {} } = {}) {
       <button class="btn btn--outline-accent" data-voice="record" disabled>Hablar</button>
       <button class="btn btn--outline-accent" data-voice="finish" disabled>Terminar</button>
     </div>
-    <p data-voice-status role="status">Solo se muestran paquetes autorizados para tu familia.</p>
+    <p data-voice-status role="status" class="voice-status">Solo se muestran paquetes autorizados para tu familia.</p>
     <audio data-voice-audio controls style="width:100%" hidden></audio>
-    <div data-voice-transcript style="max-height:220px;overflow:auto;margin:12px 0" aria-live="polite"></div>
+    <div data-voice-transcript class="voice-transcript" aria-live="polite"></div>
     <form data-voice-form style="display:flex;gap:8px"><input class="input" name="text" aria-label="Respuesta escrita al asistente" placeholder="También puedes responder por escrito" maxlength="6000" disabled><button class="btn btn--accent" disabled>Enviar</button></form>
   </article>`;
   const select = host.querySelector('[data-voice-packages]');
@@ -33,7 +33,7 @@ export function mountVoice(host, { onUpdate = () => {} } = {}) {
   function show(value) {
     conversation = value;
     if(value?.state==='active')select.innerHTML=html`<option value="${value.communication_id}">Conversación actual · asistente virtual</option>`;
-    transcript.innerHTML = (value?.turns || []).map(turn => html`<p><b>${turn.role === 'user' ? 'Tú' : 'Asistente virtual'}:</b> ${turn.text}</p>`).join('');
+    transcript.innerHTML = (value?.turns || []).map(turn => html`<div class="voice-turn ${turn.role === 'user' ? 'voice-turn--user' : ''}"><span class="voice-turn__who">${turn.role === 'user' ? 'Tú' : 'Asistente virtual'}</span>${turn.text}</div>`).join('');
     transcript.scrollTop = transcript.scrollHeight; controls(); onUpdate();
   }
   async function play(audio, autoplay = true) {

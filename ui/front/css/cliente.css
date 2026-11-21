@@ -159,3 +159,11 @@ h2.client-section__title { font-size: var(--fs-2xl); }
   .chat { right: var(--sp-4); bottom: var(--sp-4); }
   .live-chat__icon svg { width: 64px; height: 64px; }
 }
+
+/* Conversación por voz: transcripción legible y estado visible */
+.voice-transcript { max-height: 300px; overflow: auto; margin: var(--sp-3) 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.voice-transcript:empty { display: none; }
+.voice-turn { background: var(--c-surface-muted); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); line-height: 1.5; max-width: 92%; align-self: flex-start; }
+.voice-turn--user { background: var(--brand-accent-soft); align-self: flex-end; }
+.voice-turn__who { display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--c-text-muted); margin-bottom: 2px; }
+.voice-status { font-size: var(--fs-sm); color: var(--c-text-muted); margin: var(--sp-2) 0; }

@@ -111,6 +111,8 @@ export default {
         <section class="client-col" aria-labelledby="h-contact">
           <h1 id="h-contact">Centro de Contacto con mi Asesor</h1>
 
+          <div data-slot="voice"></div>
+
           <article class="card client-section" data-section="askInfo">
             ${raw(sectionToggle("askInfo", "Pedir información o consejos", isOn("askInfo")))}
             <div class="client-section__body" data-slot="ask" ${isOn("askInfo") ? "" : "hidden"}></div>
@@ -123,8 +125,6 @@ export default {
             </div>
             <span class="live-chat__icon">${raw(icon("chat"))}</span>
           </article>
-
-          <div data-slot="voice"></div>
 
           <article class="card client-section" data-section="callRequest">
             <div data-slot="call-head">${raw(sectionToggle("callRequest", "Solicitar llamada con tu asesor", isOn("callRequest")))}</div>

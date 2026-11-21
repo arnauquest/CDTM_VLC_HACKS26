@@ -130,7 +130,7 @@ export default {
       </header>
       ${raw(stepper(d.touchpoints))}
       <h2 class="detail-title">Estudio de Aprobación de Doble Canal</h2>
-      <p class="muted">Estado: ${d.state || "borrador"}. Entrega local; no se envían correos externos ni se marca un teléfono.</p>
+      <p class="muted">Estado: ${({awaiting_review:"pendiente de tu aprobación",prepared:"preparado",delivered:"aprobado y entregado al cliente",completed:"conversación completada",rejected:"rechazado",superseded:"sustituido por una versión nueva"})[d.state] || d.state || "borrador"}. Entrega local; no se envían correos externos ni se marca un teléfono.</p>
       <div class="grid-2">${raw(emailCard(d))}${raw(callCard(d))}</div>
       <section class="card"><h3>Por qué y cómo se ha preparado</h3><p>${d.decision?.reason || ""}</p><details><summary>Objetivos, preguntas previstas y límites</summary><pre style="white-space:pre-wrap;font-size:12px">${JSON.stringify(d.preparation || {},null,2)}</pre></details><a class="btn btn--outline" target="_blank" rel="noopener" href="/ops?family=${encodeURIComponent(d.family?.id || "")}">Ver decisiones del backend</a> <a class="btn btn--accent" target="_blank" rel="noopener" href="/app/?role=cliente&family=${encodeURIComponent(d.family?.id || "")}#/mi-plan">Abrir experiencia del cliente</a></section>`;
 

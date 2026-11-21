@@ -45,7 +45,7 @@ Stops the server, restores the snapshot, restarts on `SQLITE_PATH=./var/demo.sql
 | --- | --- | --- | --- |
 | 0:00–0:25 | Tab 1 `/ops` | Scroll the decision trail to the tuition event. | "A tuition headline comes in. The system screens all four families. Two get no contact, two wait for their next review — each with a written reason. Most of the time the right answer is silence." |
 | 0:25–0:55 | Tab 2 Alertas | Click **Revisar** on Samantha, show the prepared call and its limits; approve with **Llamada en navegador**. | "Samantha then asks for a short call. In manual mode nothing goes out without the advisor. The agent prepared the script, likely questions and the boundaries. One click approves it." |
-| 0:55–1:50 | Tab 3 client | Select the prepared conversation → **Iniciar conversación** (assistant speaks, ElevenLabs). Click **Hablar**, say the client line, click **Terminar grabación**. Listen to the reply. Click **Terminar**. | Client line below. |
+| 0:55–1:50 | Tab 3 client | Reload the tab: the approved call is already open at the top ("Conversar con el asistente virtual"). Press **play** on the audio player to hear the opening (ElevenLabs). Click **Hablar**, say the client line, click **Terminar grabación**. Listen to the reply. Click **Terminar**. | Client line below. |
 | 1:50–2:30 | Tab 4 `/ops?family=samantha-lewis` | Wait until "relationship analysis · completed" (~25 s; may be cut in editing, do not present as continuous timing). Show "Next thoughtful touch" (+5 days). | "The call is over, but the work isn't. The system kept what she said in her own words, her preference for short explanations, and scheduled the follow-up she asked for. When it's due, it re-evaluates before contacting her." |
 
 **Client line (speak naturally, as Samantha):**
@@ -70,5 +70,6 @@ Stops the server, restores the snapshot, restarts on `SQLITE_PATH=./var/demo.sql
 - Calls are in-browser, not telephone. Role sessions are local demo sessions, not authentication.
 - The tuition event is simulated and labelled as such; no live news feed is connected.
 - Relevance probabilities are provisional, not calibrated.
-- No interface redesign was done in this pass (time): the existing advisor, client and `/ops` views already expose every step with real backend data.
+- Interface pass (16:05–16:10): `/ops` restyled to the app's light theme and now opens with "Events and family decisions" (event → per-family decision chip + reason + communication state); technical traces are hidden behind "Show technical steps"; relationship memory labels distinguish what the client said from tentative observations. Client view: the voice call card is first and the transcript uses bubbles. Advisor detail and history show readable state labels. No redesign beyond that.
+- Verified through the UI (typed reply): approve as browser call → conversation opens for the client → reply with voice → finish → analysis completed → follow-up on 26 Nov shown in `/ops?family=samantha-lewis`. 104 tests pass.
 - This app could not record the screen (no macOS Screen Recording permission, no ffmpeg); the video is recorded manually with Cmd+Shift+5.

@@ -17,7 +17,7 @@ function historyRow(h) {
     <article class="list-row" data-id="${h.id}">
       ${raw(isAuto ? autoAvatar() : familyAvatar(h.family))}
       <div class="list-row__main">
-        <span class="list-row__title">${h.title}</span>
+        <span class="list-row__title">${({policy_updated:"Política de comunicación actualizada",family_updated:"Perfil de la familia actualizado",preferences_updated:"Preferencias actualizadas",facts_updated:"Datos financieros actualizados"})[h.title] || h.title}</span>
         <span class="list-row__subtitle">${h.subtitle}</span>
         ${raw(isAuto ? tags(h.tags) : `<div class="tags">${(h.kind === "approved" ? STATUS_TAG.approved() : tag("Registro", ""))}</div>`)}
       </div>
