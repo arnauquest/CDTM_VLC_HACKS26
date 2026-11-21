@@ -13,7 +13,7 @@ export function setAcousticProvider(name, analyzer) {
 
 export async function analyzeAcoustics(input = {}, { env = process.env, analyzer, signal, timeoutMs = 30000 } = {}) {
   const provider = env.VOICE_ANALYSIS_PROVIDER;
-  const model = env.VOICE_ANALYSIS_MODEL;
+  const model = env.VOICE_ANALYSIS_MODEL || (provider === 'gemini' ? env.GEMINI_VOICE_ANALYSIS_MODEL || 'gemini-3.5-flash-lite' : null);
   // Only acoustic evidence goes to this adapter; financial/relationship context is excluded.
   const evidence = Object.fromEntries(['schema_version', 'conversation_id', 'family_id', 'person_id', 'audio',
     'speaker_segments', 'time_mapping', 'language', 'transcript_ref', 'options'].filter(key => input[key] !== undefined).map(key => [key, input[key]]));

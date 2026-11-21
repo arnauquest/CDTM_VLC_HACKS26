@@ -10,6 +10,7 @@ import { handleFrontendAdmin } from './frontend-admin.mjs';
 import { handleFrontendClient } from './frontend-client.mjs';
 import { createAI } from './ai.mjs';
 import { createVoice } from './voice.mjs';
+import { acousticCapabilities, createGeminiAcoustic } from './gemini-acoustic.mjs';
 import { createOpenAIRouterFromEnv } from '../config/openai-failover.mjs';
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const error=(message,status=422)=>Object.assign(new Error(message),{status});
@@ -18,7 +19,7 @@ export function createApplication({rootDir=ROOT,env=process.env,store:injectedSt
  const trace=e=>store.trace({stage:e.stage||e.operation||'provider',status:e.status||'info',message:e.message||e.operation||'Provider activity',...e});
  const router=env.OPENAI_API_KEY?createOpenAIRouterFromEnv(env,{onEvent:e=>trace({stage:'api_routing',message:`OpenAI ${e.label}`,data:e})}):null;
  const ai=injectedAI||createAI({rootDir,env,trace,router});const voice=injectedVoice||createVoice({rootDir,env,trace,router});
- const engine=new Engine({store,ai,voice,concurrency:Math.max(1,Math.min(4,Number(env.AGENT_MAX_CONCURRENCY)||2))});
+ const engine=new Engine({store,ai,voice,acousticOptions:{env,analyzer:env.VOICE_ANALYSIS_PROVIDER==='gemini'?createGeminiAcoustic({env,rootDir}):undefined},concurrency:Math.max(1,Math.min(4,Number(env.AGENT_MAX_CONCURRENCY)||2))});
  const sessions=new Map();const allowedOrigins=new Set([`http://localhost:${env.APP_PORT||3000}`,`http://127.0.0.1:${env.APP_PORT||3000}`,'http://localhost:5173','http://127.0.0.1:5173',...(env.ALLOWED_ORIGINS||'').split(',').filter(Boolean)]);
  const safeMessage=e=>{let m=String(e.message||'Request failed');for(const [k,v]of Object.entries(env))if(v&&/KEY|TOKEN|SECRET/.test(k))m=m.split(v).join('[redacted]');return m.slice(0,600);};
  const redact=value=>{if(typeof value!=='string')return value;for(const [key,secret]of Object.entries(env))if(typeof secret==='string'&&secret&&/KEY|TOKEN|SECRET/i.test(key))value=value.split(secret).join('[redacted]');return value;};
@@ -43,7 +44,7 @@ export function createApplication({rootDir=ROOT,env=process.env,store:injectedSt
    if(method==='GET'&&url.pathname==='/app'){res.writeHead(302,{Location:'/app/'});res.end();return;}
    if(method==='GET'&&url.pathname.startsWith('/app/')){const base=resolve(rootDir,'ui/front');const file=resolve(base,decodeURIComponent(url.pathname.slice(5)||'index.html'));const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpeg':'image/jpeg','.jpg':'image/jpeg','.webp':'image/webp'}[extname(file)];if(!file.startsWith(base+'/')||!mime)throw error('Asset not found',404);let bytes;try{bytes=await readFile(file);}catch{throw error('Asset not found',404);}res.writeHead(200,{'Content-Type':mime+'; charset=utf-8','Cache-Control':'no-store'});res.end(bytes);return;}
    if(method==='GET'&&url.pathname==='/ops'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(await readFile(resolve(rootDir,'backend/public/ops.html')));return;}
-   if(url.pathname==='/api/health'&&method==='GET'){send(res,{ok:true,local_demo:true,now:store.now(),mode:store.getPolicy(),providers:{agents:ai.capabilities(),voice:voice.capabilities(),acoustic:'not_configured'},running_jobs:engine.running});return;}
+   if(url.pathname==='/api/health'&&method==='GET'){send(res,{ok:true,local_demo:true,now:store.now(),mode:store.getPolicy(),providers:{agents:ai.capabilities(),voice:voice.capabilities(),acoustic:acousticCapabilities(env)},running_jobs:engine.running});return;}
    if(url.pathname==='/api/session'&&method==='POST'){const input=await body(req);if(!['admin','advisor','client'].includes(input.role))throw error('Unknown role');if(input.role==='client')store.getFamily(input.family_id);const token=randomBytes(24).toString('hex');const s={id:randomBytes(8).toString('hex'),role:input.role,family_id:input.role==='client'?input.family_id:null,expires:Date.now()+12*3600000};sessions.set(token,s);res.setHeader('Set-Cookie',`sherpas_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`);send(res,{...s,token,local_demo:true});return;}
    if(url.pathname==='/api/demo/families'&&method==='GET'){send(res,store.listFamilies().map(f=>({id:f.id,name:f.name})));return;}
    if(method==='GET'&&url.pathname==='/api/brand'){const r=await handleFrontendAdmin({path:url.pathname,method,input:{},session:null,store,engine,voice,ai,env,rootDir,url});send(res,r.body,r.status||200);return;}

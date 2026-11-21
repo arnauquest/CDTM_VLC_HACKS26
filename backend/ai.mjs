@@ -1,3 +1,4 @@
+import { acousticCapabilities } from './gemini-acoustic.mjs';
 import { createOpenAIRouterFromEnv } from '../config/openai-failover.mjs';
 import { createAgentRunner } from './agents/runner.mjs';
 import { assessmentSchema, postAnalysisSchema, factRecordSchemas, validateSchema } from './agents/contracts.mjs';
@@ -162,8 +163,10 @@ function validateTranscript(output, conversation, acousticResult) {
     if (observation.transcript_span && !matches.some(turn => Number.isFinite(turn.start_ms) && Number.isFinite(turn.end_ms) &&
       observation.transcript_span.start_ms === turn.start_ms && observation.transcript_span.end_ms === turn.end_ms &&
       observation.transcript_span.end_ms >= observation.transcript_span.start_ms)) throw new Error('agent_unverified_transcript_span');
-    if ((!acousticResult || acousticResult.status === 'not_configured') && observation.acoustic_evidence_ref !== null) throw new Error('agent_acoustic_evidence_unavailable');
-    if ((!acousticResult || acousticResult.status === 'not_configured') && /vocal|acoustic|tone|prosod|voice|intensity/i.test(observation.kind)) throw new Error('agent_acoustic_inference_unavailable');
+    if ((!acousticResult || acousticResult.status !== 'available') && observation.acoustic_evidence_ref !== null) throw new Error('agent_acoustic_evidence_unavailable');
+    if (observation.acoustic_evidence_ref !== null && !(acousticResult?.observations || []).some(o => o.id === observation.acoustic_evidence_ref && o.person_id === observation.person_id && matches.some(t => t.id === o.turn_id))) throw new Error('agent_acoustic_reference_unverified');
+    if (/vocal|acoustic|tone|prosod|voice|intensity/i.test(observation.kind) && (!observation.acoustic_evidence_ref || observation.confirmed_by_client)) throw new Error('agent_acoustic_estimate_requires_tentative_evidence');
+    if ((!acousticResult || acousticResult.status !== 'available') && /vocal|acoustic|tone|prosod|voice|intensity/i.test(observation.kind)) throw new Error('agent_acoustic_inference_unavailable');
   }
   for (const preference of output.preference_changes) {
     if (!preference.quote.trim() || !customerTurns.some(turn => (turn.person_id || conversation.person_id) === preference.person_id && normalize(turn.text).includes(normalize(preference.quote)))) throw new Error('agent_unverified_preference_quote');
@@ -186,7 +189,7 @@ export function createAI({ rootDir = process.cwd(), env = process.env, trace = (
           claude: { implemented: true, authentication: 'local_login', verification: 'untested_login' },
           opencode: { implemented: true, authentication: 'local_login', verification: 'untested_login' } },
         isolation: 'private_job_directory; Codex read-only sandbox is not filesystem read isolation; tools disabled where supported',
-        acoustic: { status: 'not_configured', result: null } };
+        acoustic: acousticCapabilities(env) };
     },
     async relevance({ event, family }) {
       const started = Date.now();

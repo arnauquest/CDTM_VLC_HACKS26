@@ -14,7 +14,7 @@ The four supplied synthetic cases remain the source of family data. Source snaps
 
 Local role selection is for the demo, not production identity management. Billing, account provisioning, portfolio reassignment and changing backend guardrails return explicit unsupported-operation errors. Guardrails describe implemented controls, without a regulatory-certification claim. Integration diagnostics inspect configuration without claiming an unperformed network test.
 
-Browser voice uses configured providers for actual uploaded audio and generated replies. No outbound email or PSTN calls are sent, and no acoustic emotion model is configured. Brand images are uploaded as JSON PNG/JPEG/WebP data URIs; SVG and external image URLs are rejected.
+Browser voice uses configured providers for actual uploaded audio and generated replies. No outbound email or PSTN calls are sent, and optional Gemini audio observations are now implemented (see `backend/GEMINI-TONE.md`). Brand images are uploaded as JSON PNG/JPEG/WebP data URIs; SVG and external image URLs are rejected.
 
 ## Implementation references
 
@@ -37,3 +37,7 @@ Computer Use verified advisor, client and admin screens against the running back
 The microphone capture control is wired but was not exercised with a human recording in this integration pass. Earlier provider checks covered transcription separately. No real client was contacted. Browser error/warning logs were empty for the tested advisor and client flows.
 
 The existing `check:live`, `check:flow` and `check:relevance` scripts remain optional real-provider checks. They can consume provider usage; frontend mock mode is not a substitute for those checks.
+
+## Gemini follow-up integration
+
+Gemini audio analysis is now wired into post-conversation analysis, with an isolated adapter and evidence validation. 104 automated tests pass. A real Gemini request with existing synthetic generated speech succeeded in 2,343 ms; human microphone/tone-quality validation is pending. Details and configuration are in `backend/GEMINI-TONE.md`. No new dependencies were installed.

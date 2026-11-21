@@ -114,7 +114,7 @@ Delivery is to the local demo inbox. Browser voice can use real providers; phone
 
 Send either text or base64 audio. Uploaded audio is limited to 10 MiB; HTTP JSON body is limited to 15 MiB. Supported MIME types include WebM, Ogg, WAV, MPEG, MP4, AAC and FLAC. `audio:false` disables synthesized reply audio for a text-only interaction. Audio/provider failures are surfaced; no fake transcription or synthesized clip is substituted. Turn `Idempotency-Key` or `request_id` avoids duplicate completed turn requests.
 
-Conversation `state:"completed"` and `analysis_state:"completed"` are different milestones. Postanalysis can be `pending` or `failed` after the conversation ends. Verified observations, explicit preferences, factual proposals and follow-ups are applied after successful analysis. `acoustic_status` remains `not_configured`; absent acoustic scores are not zero concern.
+Conversation `state:"completed"` and `analysis_state:"completed"` are different milestones. Postanalysis can be `pending` or `failed` after the conversation ends. Verified observations, explicit preferences, factual proposals and follow-ups are applied after successful analysis. `acoustic_status` reports `available`, `unavailable`, `no_speech`, `low_quality`, `failed` or `not_configured`. Gemini requires `VOICE_ANALYSIS_PROVIDER=gemini` and `GEMINI_API_KEY`; missing audio and missing estimates are never zero concern. Evidence lives in relationship assessments under `acoustic`, with recording-relative intervals, per-turn IDs and tentative qualitative confidence.
 
 ## Follow-ups and demo time
 

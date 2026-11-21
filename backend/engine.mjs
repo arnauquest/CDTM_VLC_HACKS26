@@ -151,7 +151,7 @@ export class Engine {
    this.store.updateFamily(family.id,{expectedVersion:family.version,observations,preferenceChanges:preferences,factChanges:(result.fact_changes||[]).filter(x=>!proposed.includes(x)).map(x=>({...x,status:'self_reported',effective_at:x.effective_at||c.ended_at||this.store.now(),evidence_ref:x.evidence_ref||c.id})),openQuestions:result.open_questions,summary:result.summary},'relationship_agent');
    for(const p of result.followup_proposals||[])this.schedule(family.id,p,{conversation_id:c.id,event_id:c.event_id});
    this.store.put('assessments',{family_id:family.id,event_id:c.event_id,conversation_id:c.id,kind:'relationship',result,acoustic:acousticResult});
-   this.store.patch('conversations',c.id,{analysis_state:'completed',analysis_error:null,acoustic_status:acousticResult.status});
+   this.store.patch('conversations',c.id,{analysis_state:'completed',analysis_error:null,acoustic_status:acousticResult.status,acoustic_result:acousticResult});
    this.store.put('executions',{id:job.id,family_id:family.id,conversation_id:c.id});
    this.trace('relationship_analysis','completed','Profile updated and useful follow-ups scheduled',{family_id:family.id,event_id:c.event_id,data:{conversation_id:c.id,observations:observations.length,followups:result.followup_proposals,acoustic_status:acousticResult.status}});
   });

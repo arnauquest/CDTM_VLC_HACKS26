@@ -149,3 +149,12 @@ test('all real family contexts remain bounded with long histories and no recursi
     }
   } finally { store.close(); }
 });
+
+test('acoustic conclusions require available evidence from the same customer turn and remain tentative', async () => {
+ const audioConversation={...conversation,turns:conversation.turns.map((t,i)=>({...t,id:'turn'+i}))};
+ const output=postOutput();Object.assign(output.observation_additions[0],{kind:'tentative_acoustic_estimate',acoustic_evidence_ref:'evidence1',confirmed_by_client:false});
+ const args={conversation:audioConversation,event,family,policy,now,acousticResult:{status:'available',observations:[{id:'evidence1',person_id:'p1',turn_id:'turn0'}]}};
+ await createAI({env:{},runner:runner(output)}).postAnalyze(args);
+ for(const change of [{status:'failed'},{observations:[{id:'evidence1',person_id:'p1',turn_id:'turn1'}]},{observations:[]}]) await assert.rejects(createAI({env:{},runner:runner(output)}).postAnalyze({...args,acousticResult:{...args.acousticResult,...change}}));
+ const confirmed=structuredClone(output);confirmed.observation_additions[0].confirmed_by_client=true;await assert.rejects(createAI({env:{},runner:runner(confirmed)}).postAnalyze(args));
+});

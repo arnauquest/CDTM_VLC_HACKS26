@@ -1,3 +1,4 @@
+import { acousticCapabilities } from './gemini-acoustic.mjs';
 import { createHash } from 'node:crypto';
 
 const fail = (message, status = 422) => Object.assign(new Error(message), { status });
@@ -80,7 +81,7 @@ function integrations(env, ai) {
     entry('openai', 'OpenAI · clasificación y conversación', Boolean(env.OPENAI_API_KEY), 'Se comprueba únicamente la presencia de la configuración local.'),
     entry('elevenlabs', 'ElevenLabs · transcripción y voz', Boolean(env.ELEVENLABS_API_KEY && env.ELEVENLABS_VOICE_ID), 'La clave y la voz deben estar configuradas; esta comprobación no genera audio ni consume créditos.'),
     entry('agents', `Agentes locales · ${capabilities.agent_provider || env.AGENT_PROVIDER || 'codex'}`, true, 'Adaptador local disponible. La sesión del proveedor se valida al ejecutar un análisis real.'),
-    entry('acoustic', 'Análisis acústico', Boolean(env.VOICE_ANALYSIS_PROVIDER && env.VOICE_ANALYSIS_PROVIDER !== 'none' && env.VOICE_ANALYSIS_MODEL), 'Seleccionar un proveedor no implica disponer de un adaptador registrado ni de resultados acústicos.')
+    entry('acoustic', 'Análisis acústico', acousticCapabilities(env).configured, 'Gemini analiza grabaciones del cliente al terminar la conversación. Sus observaciones son tentativas; esta comprobación no envía audio.')
   ];
 }
 const guardrails = () => [

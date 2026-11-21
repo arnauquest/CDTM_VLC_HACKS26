@@ -88,7 +88,7 @@ test('conversation post-analysis verifies preferences, preserves other family, a
   await engine.turn(c.id, { text: 'Please use text next time.', audio: false, request_id: 'one' }); assert.equal(store.get('conversations', c.id).turns.length, 3);
   await Promise.all([engine.finish(c.id), engine.finish(c.id)]); assert.equal(store.list('jobs', { stage: 'post_analysis' }).length, 1); await drain();
   const family = store.getFamily(FAMILY); assert.equal(family.relationship.preferences[c.person_id].channel, 'text'); assert.equal(family.relationship.observations.length, 1);
-  assert.equal(store.get('conversations', c.id).analysis_state, 'completed'); assert.equal(store.get('conversations', c.id).acoustic_status, 'not_configured'); assert.deepEqual(store.getFamily(OTHER), otherBefore);
+  assert.equal(store.get('conversations', c.id).analysis_state, 'completed'); assert.equal(store.get('conversations', c.id).acoustic_status, 'not_configured'); assert.equal(store.get('conversations', c.id).acoustic_result.status, 'not_configured'); assert.deepEqual(store.getFamily(OTHER), otherBefore);
   const followup = store.list('followups')[0]; assert.equal(followup.state, 'scheduled');
   ai.assess = async args => ({ ...assessment(args), contact: { decision: 'none', reason: 'The client already resolved this concern.' } });
   store.setClock('2090-01-06T00:00:00Z'); engine.runDue(); engine.runDue(); assert.equal(store.list('events', { origin: 'scheduler' }).length, 1); await drain();
