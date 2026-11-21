@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "front",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["ui/front/dev-server.py", "5174"],
+      "port": 5174
+    }
+  ]
+}
