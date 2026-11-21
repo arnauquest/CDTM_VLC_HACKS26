@@ -1,0 +1,27 @@
+# Local credentials and machine-specific settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime data, recordings, provider sessions and local databases
+var/
+.runtime/
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+
+# Dependencies and generated artifacts
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.next/
+dist/
+build/
+coverage/
+.DS_Store
