@@ -38,6 +38,14 @@ Configuration check files are local and ignored under `var/config-check/codex/`.
 
 ## Intended runtime
 
+### Live credential verification
+
+On 21 November 2026, both configured OpenAI accounts returned HTTP 200 for a synthetic Decisions request using gpt-6-luna and a streaming Chat Completions request with that model and reasoning_effort=none. The local router was used for those requests. The fallback switch itself remains covered by simulated rate-limit tests; no account was deliberately exhausted.
+
+ElevenLabs returned HTTP 200 for account, voices and model discovery. A short synthetic greeting was generated with eleven_v4_turbo and successfully transcribed with scribe_v2. The tested voice is selected in the private .env. Reports and the synthetic audio are ignored under var/config-check/providers/.
+
+These checks establish access and basic API operation. Browser microphone permissions, a full live conversation, end-to-end latency and frontend integration will be verified during implementation. Acoustic emotion analysis remains not_configured by agreement.
+
 The backend, worker, SQLite database and frontend will run on this Mac. Calls will use browser audio. Provider API access still needs internet. No cloud deployment or phone-network integration is configured.
 
 Manual mode queues every outgoing communication for approval. Automatic mode sends eligible communications and queues exceptions. The backend must enforce the current mode; changing this environment variable alone is not yet functional. Calls are prepared with goals, facts, likely questions, alternative conversation paths and clear escalation limits.
