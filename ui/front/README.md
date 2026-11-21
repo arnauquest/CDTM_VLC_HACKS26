@@ -1,5 +1,23 @@
 # Front · Perfiles Consultor, Administrador y Cliente
 
+## Current integration status — local backend
+
+This frontend is now served by the repository's backend at **[http://127.0.0.1:3000/app/](http://127.0.0.1:3000/app/)**. Run `npm start` from the repository root after configuring the existing `.env`; there is no frontend build and no new package installation. The original layout, components and visual design are retained.
+
+- Real API mode is the default. Mocks are opt-in with `?mock=1`; their example people, counts and messages are not production or live demo data.
+- Select a local demo role with `?role=consultor`, `?role=admin`, or `?role=cliente&family=michael-carter`. The client family selector supports the four supplied case slugs. Role selection is demo-only and is **not production authentication**.
+- Bearer tokens live in tab-scoped `sessionStorage`, keyed by role and family. The same-origin `/app/` deployment is recommended. `/ops` remains the separate operational diagnostic UI.
+- API view models are implemented in [advisor](../../backend/frontend-advisor.mjs), [client](../../backend/frontend-client.mjs), and [admin](../../backend/frontend-admin.mjs) adapters. Read their [advisor contract](../../backend/FRONTEND-ADVISOR.md), [client contract](../../backend/FRONTEND-CLIENT.md), and [admin contract](../../backend/FRONTEND-ADMIN.md) for current semantics and unavailable operations.
+- Figures come from the local Store; unavailable SLA/capacity metrics are shown as unavailable. Billing, account provisioning and portfolio reassignment are not implemented. Backend guardrails are read-only. Integration verification checks configuration and does not claim a successful network connection.
+- Brand uploads now send JSON image data URIs for PNG/JPEG/WebP, maximum 2 MiB. SVG and external asset URLs are rejected. Draft/reset operations do not change the active brand until publication.
+- Browser voice can use configured real transcription, reply and synthesis providers. There is no outbound email, telephone dialing or acoustic emotion model. Original family snapshots are immutable; validated changes update a versioned overlay.
+
+Changes are confined to `codex/local-setup`, which merged `origin/feat/ui-front` at `2591c9a` through merge commit `33ad2fd`. The source frontend branch was not edited. See [integration history](../../INTEGRATION.md) and the [root startup guide](../../README.md).
+
+**The original frontend README below is preserved for design history and detailed reference. Its earlier mock-default startup instructions, sample data and planned backend contracts are superseded by this notice and the adapter contracts above.**
+
+---
+
 Interfaz gráfica (HTML + CSS + JavaScript vanilla, **sin build ni dependencias**) para los tres perfiles de la plataforma, construida a partir de las maquetas de [`UI_mock/`](../../UI_mock):
 
 | Perfil | Quién es | Layout | Maquetas |

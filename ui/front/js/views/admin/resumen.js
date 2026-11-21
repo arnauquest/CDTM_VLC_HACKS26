@@ -14,6 +14,7 @@ import { kpiCard, chipGroup, bindChips, avatar, tag, mountAsync, skeleton, empty
  * se deriva de familiesAssigned/capacity.
  */
 const WORKLOAD_STATUS = {
+  not_measured: {label:"Capacidad no medida",tone:"",over:false},
   overloaded_urgent: { label: "Sobrecargado - Reasignar urgente", tone: "danger", over: true, alert: true },
   overloaded: { label: "Sobrecargado", tone: "danger", over: true },
   near_limit: { label: "Cerca del límite", tone: "", over: false },
@@ -21,6 +22,7 @@ const WORKLOAD_STATUS = {
 };
 function deriveStatus(c) {
   if (c.status && WORKLOAD_STATUS[c.status]) return WORKLOAD_STATUS[c.status];
+  if (!c.capacity) return WORKLOAD_STATUS.not_measured;
   const r = c.familiesAssigned / c.capacity;
   if (r > 1.05) return WORKLOAD_STATUS.overloaded_urgent;
   if (r > 1) return WORKLOAD_STATUS.overloaded;
@@ -70,7 +72,7 @@ export default {
         name: "filter", active: filter,
         items: [
           { id: "all", label: "Todos los Consultores" },
-          { id: "overloaded", label: "Sobrecargados (>150)", tone: "warning" },
+          { id: "overloaded", label: "Sobrecargados", tone: "warning" },
           { id: "low_sla", label: "Bajo SLA" },
           { id: "inactive", label: "Inactivos" },
         ],

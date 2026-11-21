@@ -3,7 +3,7 @@
  * Endpoints: GET /history/summary, GET /history?type=, POST /history/:id/revert
  */
 import { consultorApi } from "../../api/endpoints.js";
-import { html, raw, on, fmt } from "../../ui/dom.js";
+import { html, raw, on, fmt, escapeHtml } from "../../ui/dom.js";
 import { kpiCard, chipGroup, bindChips, familyAvatar, autoAvatar, tag, tags, mountAsync, skeleton, emptyState, withLoading, openModal, toast } from "../../ui/components.js";
 
 const STATUS_TAG = {
@@ -19,12 +19,12 @@ function historyRow(h) {
       <div class="list-row__main">
         <span class="list-row__title">${h.title}</span>
         <span class="list-row__subtitle">${h.subtitle}</span>
-        ${raw(isAuto ? tags(h.tags) : `<div class="tags">${STATUS_TAG.approved()}</div>`)}
+        ${raw(isAuto ? tags(h.tags) : `<div class="tags">${(h.kind === "approved" ? STATUS_TAG.approved() : tag("Registro", ""))}</div>`)}
       </div>
       <div class="list-row__actions">
         ${isAuto ? raw(STATUS_TAG.silent()) : ""}
         <button class="btn btn--outline" data-action="detail">Ver Detalle</button>
-        <button class="btn btn--outline-accent" data-action="revert">Revertir / Ajustar Regla</button>
+        ${h.reversible ? raw(`<button class="btn btn--outline-accent" data-action="revert">Cancelar seguimiento</button>`) : ""}
       </div>
     </article>`;
 }
@@ -32,7 +32,7 @@ function historyRow(h) {
 export default {
   title: "Historial",
   async render(el) {
-    let type = "silent";
+    let type = "all";
     let summary = null;
     let items = [];
 
@@ -41,7 +41,7 @@ export default {
       <section class="grid-kpis" data-slot="kpis"></section>
       <div class="section-header">
         <div data-slot="chips"></div>
-        <div class="section-header__actions"><button class="btn btn--accent" data-action="batch">Aprobar Lote</button></div>
+        <div class="section-header__actions"><a class="btn btn--accent" href="/ops" target="_blank" rel="noopener">Ver decisiones del proceso</a></div>
       </div>
       <section class="list" data-slot="list"></section>`;
 
@@ -84,11 +84,11 @@ export default {
       switch (btn.dataset.action) {
         case "detail":
           // TODO: definir con backend si hay vista de detalle propia o modal.
-          openModal({ title: item.title, bodyHtml: `<p>${item.subtitle}</p><p class="muted">${fmt.date(item.createdAt)}</p>`, confirmLabel: "Cerrar", cancelLabel: "Volver" });
+          openModal({ title: item.title, bodyHtml: `<p>${escapeHtml(item.subtitle)}</p><p class="muted">${fmt.date(item.createdAt)}</p>`, confirmLabel: "Cerrar", cancelLabel: "Volver" });
           break;
         case "revert": {
-          const ok = await openModal({ title: "Revertir acción", bodyHtml: "<p>Se revertirá la acción y podrás ajustar la regla que la originó.</p>", confirmLabel: "Revertir", tone: "primary" });
-          if (ok) await withLoading(btn, () => consultorApi.revertHistory(id), { success: "Acción revertida" }).catch(() => {});
+          const ok = await openModal({ title: "Cancelar seguimiento", bodyHtml: "<p>Se cancelará este seguimiento pendiente. Los mensajes enviados y el historial se conservan.</p>", confirmLabel: "Cancelar seguimiento", tone: "primary" });
+          if (ok) await withLoading(btn, () => consultorApi.revertHistory(id), { success: "Seguimiento cancelado" }).catch(() => {});
           break;
         }
         case "batch":

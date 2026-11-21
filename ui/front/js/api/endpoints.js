@@ -9,14 +9,25 @@
  * de cada respuesta está documentado en README.md (sección "Contrato de datos")
  * y reflejado en js/api/mocks/data.js.
  */
-import { http } from "./client.js";
+import { http, setToken } from "./client.js";
+import { config } from "../config.js";
+const reviewed = new Map();
+const remember = d => { if(d?.id)reviewed.set(d.id,{content_version:d.content_version,facts_hash:d.facts_hash});return d; };
+const version = id => reviewed.get(id) || {};
 
 const enc = encodeURIComponent;
 
 /* ======================== SESIÓN ======================== */
 export const sessionApi = {
   /** Usuario actual -> { id, name, avatarUrl, role: "consultor"|"admin"|"cliente", tenant: { id, name }, family?: { id, name } } */
-  me: () => http.get("/me"),
+  me: async () => {
+    if (!config.USE_MOCKS) {
+      const role = ({consultor:"advisor",cliente:"client",admin:"admin"})[config.MOCK_ROLE] || "advisor";
+      const s = await http.post("/session", {role, family_id:role === "client" ? config.DEMO_FAMILY : undefined});
+      setToken(s.token);
+    }
+    return http.get("/me");
+  },
   logout: () => http.post("/auth/logout"),
 };
 
@@ -31,7 +42,11 @@ export const brandApi = {
   /** Restaura valores por defecto (admin) -> Brand */
   reset: () => http.post("/brand/reset"),
   /** Sube logo o isotipo. kind: "logo" | "icon" -> { url } */
-  uploadAsset: (kind, file) => {
+  uploadAsset: async (kind, file) => {
+    if (!config.USE_MOCKS) {
+      const dataUrl = await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
+      return http.post("/brand/assets",{kind,dataUrl});
+    }
     const fd = new FormData();
     fd.append("kind", kind);
     fd.append("file", file);
@@ -49,6 +64,10 @@ export const notificationsApi = {
 
 /* ======================== CONSULTOR ======================== */
 export const consultorApi = {
+  createEvent: (event) => http.post("/events",event),
+  audio: (url) => http.get(url.replace(/^\/api/,""),{responseType:"blob"}),
+  reject: (id,reason) => http.post(`/communications/${enc(id)}/reject`,{reason}),
+  revise: (id,instruction) => http.post(`/communications/${enc(id)}/revise`,{instruction}),
   /** KPIs de Inicio -> { familiesMonitored, activeAlerts, avgReviewMinutes, silentActions } */
   dashboardSummary: () => http.get("/consultant/dashboard"),
 
@@ -56,25 +75,25 @@ export const consultorApi = {
   alertCategories: () => http.get("/alerts/categories"),
 
   /** Feed de alertas -> [AlertSummary]. categories: array de ids */
-  alerts: ({ categories, status = "pending", consultantId } = {}) => http.get("/alerts", { query: { category: categories, status, consultant: consultantId } }),
+  alerts: async ({ categories, status = "pending", consultantId } = {}) => {const rows=await http.get("/alerts", { query: { category: categories, status, consultant: consultantId } }); rows.forEach(remember); return rows;},
 
   /** Detalle -> AlertDetail */
-  alert: (id) => http.get(`/alerts/${enc(id)}`),
+  alert: async (id) => remember(await http.get(`/alerts/${enc(id)}`)),
   /** Aprobación en lote -> { approved: number } */
-  approveBatch: (ids) => http.post("/alerts/batch-approve", { ids }),
+  approveBatch: (ids) => http.post("/alerts/batch-approve", config.USE_MOCKS ? {ids} : {items:ids.map(id=>({id,...version(id)}))}),
   /** Guarda edición del borrador de correo y/o guion */
-  updateDraft: (id, draft) => http.put(`/alerts/${enc(id)}/draft`, draft),
+  updateDraft: async (id, draft) => remember(await http.put(`/alerts/${enc(id)}/draft`, {...draft,...version(id)})),
   /** Envía el correo 1-clic */
-  approveEmail: (id) => http.post(`/alerts/${enc(id)}/email/approve`),
+  approveEmail: (id) => http.post(`/alerts/${enc(id)}/email/approve`,version(id)),
   /** Lanza la llamada automatizada */
-  launchCall: (id) => http.post(`/alerts/${enc(id)}/call/launch`),
+  launchCall: (id) => http.post(`/alerts/${enc(id)}/call/launch`,version(id)),
   /** Pospone la alerta. until: ISO date */
-  snooze: (id, until) => http.post(`/alerts/${enc(id)}/snooze`, { until }),
+  snooze: (id, until) => http.post(`/alerts/${enc(id)}/snooze`, { until,...version(id) }),
 
   /** KPIs de Familias -> { total, needsApproval, autopilot } */
-  familiesSummary: () => http.get("/families/summary"),
+  familiesSummary: () => http.get(config.USE_MOCKS ? "/families/summary" : "/ui/families/summary"),
   /** Familias -> [FamilySummary]. status: "all"|"needs_approval"|"autopilot" */
-  families: ({ q, status } = {}) => http.get("/families", { query: { q, status } }),
+  families: ({ q, status } = {}) => http.get(config.USE_MOCKS ? "/families" : "/ui/families", { query: { q, status } }),
 
   /** KPIs historial -> { total, silent, approved } */
   historySummary: () => http.get("/history/summary"),
@@ -109,6 +128,7 @@ export const clienteApi = {
   messages: ({ after } = {}) => http.get("/client/chat/messages", { query: { after } }),
   /** Envía mensaje. payload: { text, topicId? } -> ChatMessage */
   sendMessage: (payload) => http.post("/client/chat/messages", payload),
+  finishConversation: (payload = {}) => http.post("/client/chat/finish", payload),
 
   /** Huecos disponibles para llamada -> [{ id, label, start }] */
   callSlots: () => http.get("/client/call-slots"),

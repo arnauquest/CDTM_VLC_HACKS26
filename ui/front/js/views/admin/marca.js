@@ -17,7 +17,7 @@ import { html, raw, on, escapeHtml } from "../../ui/dom.js";
 import { icon } from "../../ui/icons.js";
 import { tag, skeleton, withLoading, openModal, toast } from "../../ui/components.js";
 
-const ACCEPT = "image/png,image/svg+xml";
+const ACCEPT = "image/png,image/jpeg,image/webp";
 
 function dropzone(kind, title, hint, url) {
   return html`
@@ -218,7 +218,7 @@ export default {
 
     async function upload(kind, file) {
       if (!file) return;
-      if (!["image/png", "image/svg+xml"].includes(file.type)) return toast("Formato no admitido: usa PNG o SVG", "error");
+      if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return toast("Formato no admitido: usa PNG, JPEG o WebP", "error");
       if (file.size > 2 * 1024 * 1024) return toast("El archivo supera 2 MB", "error");
       const zone = el.querySelector(`[data-dropzone="${kind}"]`);
       zone.classList.add("is-loading");

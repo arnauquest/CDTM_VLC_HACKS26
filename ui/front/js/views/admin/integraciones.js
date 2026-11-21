@@ -16,12 +16,13 @@ function integrationRow(i) {
     <div class="integration-item" data-id="${i.id}">
       <span>${i.name}</span>
       <span class="tag tag--${tone} tag--lg" style="border:2px solid currentColor">${i.statusLabel || i.status}</span>
-      <span>${i.canVerify ? raw(`<button class="btn btn--link" data-action="verify">Verificar conexión</button>`) : ""}</span>
+      <span>${i.canVerify ? raw(`<button class="btn btn--link" data-action="verify">Revisar configuración</button>`) : ""}</span>
       <span>${i.canConfigure ? raw(`<button class="btn btn--outline" data-action="configure">Configurar API</button>`) : ""}</span>
     </div>`;
 }
 
 function billingHtml(b) {
+  if(b.configured === false)return html`<p>${b.message || "Prototipo local sin facturación ni cargos. Las claves se configuran en el servidor."}</p>`;
   const pct = b.seatsTotal ? Math.round((b.seatsUsed / b.seatsTotal) * 100) : 0;
   return html`
     <div class="billing">
@@ -69,7 +70,7 @@ export default {
       const id = btn.closest("[data-id]")?.dataset.id;
       switch (btn.dataset.action) {
         case "verify":
-          await withLoading(btn, () => adminApi.verifyIntegration(id), { success: "Conexión verificada" }).catch(() => {});
+          await withLoading(btn, () => adminApi.verifyIntegration(id), { success: "Configuración revisada" }).catch(() => {});
           loadIntegrations();
           break;
         case "configure":

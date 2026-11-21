@@ -23,6 +23,7 @@ import { icon } from "../../ui/icons.js";
 import { avatar, toggle, mountAsync, skeleton, emptyState, withLoading, toast } from "../../ui/components.js";
 import { planCard } from "./_plan-cards.js";
 import { mountChat } from "./_chat.js";
+import { mountVoice } from "./_voice.js";
 
 const firstName = (name = "") => name.split(" ")[0];
 
@@ -67,7 +68,7 @@ function askInfoBody(advisor, topics) {
 
 function callBody(slots) {
   return html`
-    <p class="call-request__text">Selecciona tu preferencia de horario.</p>
+    <p class="call-request__text">Elige una fecha de seguimiento en la demo. No representa disponibilidad humana confirmada.</p>
     <div class="call-request__grid">
       <label class="call-request__slot">
         <span class="call-request__cal" aria-hidden="true">${raw(icon("calendar"))}</span>
@@ -79,7 +80,7 @@ function callBody(slots) {
         </select>
       </label>
       <button class="btn btn--outline-accent" data-action="call-asap">Solicitar llamada</button>
-      <button class="btn btn--accent" data-action="call-slot" ${slots.length ? "" : "disabled"}>Programar Llamada</button>
+      <button class="btn btn--accent" data-action="call-slot" ${slots.length ? "" : "disabled"}>Programar seguimiento</button>
     </div>`;
 }
 
@@ -117,11 +118,13 @@ export default {
 
           <article class="card live-chat">
             <div class="live-chat__text">
-              <h3 class="client-section__title">Chat de Asesoría en Vivo</h3>
+              <h3 class="client-section__title">Chat con el asistente virtual</h3>
               <button class="btn btn--accent" data-action="open-chat">Abrir chat</button>
             </div>
             <span class="live-chat__icon">${raw(icon("chat"))}</span>
           </article>
+
+          <div data-slot="voice"></div>
 
           <article class="card client-section" data-section="callRequest">
             <div data-slot="call-head">${raw(sectionToggle("callRequest", "Solicitar llamada con tu asesor", isOn("callRequest")))}</div>
@@ -136,17 +139,28 @@ export default {
       (plan) => (plan.cards?.length ? plan.cards.map(planCard).join("") : emptyState("Tu plan se está preparando")),
       { skeleton: skeleton("card", 4) });
     mountAsync(el.querySelector('[data-slot="update"]'), clienteApi.updateFields, updateForm, { skeleton: skeleton("card", 1) });
+    let disposed = false;
+    // The worker applies submitted facts asynchronously; refresh effective cards
+    // without replacing the form or interrupting a live conversation.
+    const planTimer = setInterval(async () => {
+      if (document.hidden || disposed) return;
+      try {
+        const plan = await clienteApi.plan();
+        if (!disposed) el.querySelector('[data-slot="plan"]').innerHTML = plan.cards?.length ? plan.cards.map(planCard).join("") : emptyState("Tu plan se está preparando");
+      } catch { /* Retain the last verified plan while a request is unavailable. */ }
+    }, 5000);
 
     // --- Columna derecha
     const chatHost = el.querySelector('[data-slot="chat-host"]');
     let chat = null;
+    const voicePanel = mountVoice(el.querySelector('[data-slot="voice"]'), { onUpdate: () => chat?.refresh() });
 
     mountAsync(el.querySelector('[data-slot="ask"]'), () => Promise.all([clienteApi.advisor(), clienteApi.quickTopics()]),
       ([adv, topics]) => {
         advisor = adv;
         // Ahora que conocemos al asesor, personalizamos títulos y el chat.
         el.querySelector("#sec-callRequest").textContent = `Solicitar llamada con ${firstName(adv.name)}`;
-        chat = mountChat(chatHost, { advisor: adv, startOpen: window.matchMedia("(min-width: 1100px)").matches });
+        chat = mountChat(chatHost, { advisor: adv, startOpen: false });
         return askInfoBody(adv, topics);
       }, { skeleton: skeleton("line", 3) });
 
@@ -158,7 +172,7 @@ export default {
         const body = input.closest("[data-section]").querySelector(".client-section__body");
         body.hidden = !input.checked;
         prefs.sections = { ...prefs.sections, [input.name]: input.checked };
-        try { await clienteApi.savePreferences(prefs); } catch { /* preferencia no crítica */ }
+        try { await clienteApi.savePreferences(prefs); } catch { toast("No se pudo guardar la preferencia de vista", "error"); }
       }),
 
       on(el, "submit", '[data-form="update"]', async (e, form) => {
@@ -166,7 +180,7 @@ export default {
         const data = Object.fromEntries(new FormData(form));
         if (!Object.values(data).some((v) => String(v).trim())) return toast("Rellena al menos un campo", "error");
         const ok = await withLoading(form.querySelector("[type=submit]"), () => clienteApi.submitUpdate(data),
-          { success: "Datos enviados a tu asesor" }).then(() => true).catch(() => false);
+          { success: "Información recibida para analizar; actualización pendiente" }).then(() => true).catch(() => false);
         if (ok) form.reset();
       }),
 
@@ -182,19 +196,19 @@ export default {
             break;
           case "call-asap":
             await withLoading(btn, () => clienteApi.requestCall({ asap: true }),
-              { success: `${firstName(advisor.name)} te llamará lo antes posible` }).catch(() => {});
+              { success: "Petición recibida. No hay una llamada humana confirmada." }).catch(() => {});
             break;
           case "call-slot": {
             const select = el.querySelector("[data-slot-select]");
             const label = select.selectedOptions[0]?.textContent;
             await withLoading(btn, () => clienteApi.requestCall({ slotId: select.value }),
-              { success: `Llamada programada: ${label}` }).catch(() => {});
+              { success: `Seguimiento demo programado: ${label}` }).catch(() => {});
             break;
           }
         }
       }),
     ];
 
-    return () => { offs.forEach((off) => off()); chat?.destroy(); };
+    return () => { disposed = true; clearInterval(planTimer); offs.forEach((off) => off()); chat?.destroy(); voicePanel.destroy(); };
   },
 };

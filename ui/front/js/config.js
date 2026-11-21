@@ -8,8 +8,8 @@
  * params en desarrollo:
  *   ?mock=0            -> fuerza backend real
  *   ?mock=1            -> fuerza mocks
- *   ?role=admin        -> (solo mocks) simula la sesión de un admin
- *   ?role=consultor    -> (solo mocks) simula la sesión de un consultor
+ *   ?role=admin        -> selecciona la sesión local de un admin
+ *   ?role=consultor    -> selecciona la sesión local de un consultor
  */
 
 const params = new URLSearchParams(window.location.search);
@@ -23,28 +23,29 @@ function readBool(name, fallback) {
 
 export const config = {
   /** URL base del backend (sin barra final). */
-  API_BASE_URL: overrides.API_BASE_URL ?? "http://localhost:8000/api",
+  API_BASE_URL: overrides.API_BASE_URL ?? (window.location.port === "5173" ? "http://127.0.0.1:3000/api" : "/api"),
 
   /**
    * true  -> las llamadas se resuelven con js/api/mocks/*.js (no hay red).
    * false -> se llama al backend real en API_BASE_URL.
    * Mientras el backend no esté listo, dejar en true.
    */
-  USE_MOCKS: readBool("mock", overrides.USE_MOCKS ?? true),
+  USE_MOCKS: readBool("mock", overrides.USE_MOCKS ?? false),
 
   /** Latencia simulada de los mocks (ms) para ver skeletons. */
   MOCK_LATENCY_MS: overrides.MOCK_LATENCY_MS ?? 350,
 
   /** Timeout de las peticiones reales (ms). */
-  REQUEST_TIMEOUT_MS: overrides.REQUEST_TIMEOUT_MS ?? 15000,
+  REQUEST_TIMEOUT_MS: overrides.REQUEST_TIMEOUT_MS ?? 120000,
 
   /** Clave de localStorage donde se guarda el token de sesión (Bearer). */
-  AUTH_TOKEN_KEY: overrides.AUTH_TOKEN_KEY ?? "sherpas.token",
+  AUTH_TOKEN_KEY: overrides.AUTH_TOKEN_KEY ?? `sherpas.token.${params.get("role") || "consultor"}.${params.get("family") || "michael-carter"}`,
 
   /** Clave de localStorage para cachear la marca y evitar parpadeo al cargar. */
   BRAND_CACHE_KEY: overrides.BRAND_CACHE_KEY ?? "sherpas.brand",
 
-  /** Rol simulado en modo mock. */
+  /** Rol de la sesión local (también usado por los mocks). */
+  DEMO_FAMILY: params.get("family") || "michael-carter",
   MOCK_ROLE: params.get("role") || overrides.MOCK_ROLE || "consultor",
 
   /**

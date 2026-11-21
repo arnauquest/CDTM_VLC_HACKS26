@@ -2,6 +2,8 @@
 
 A local, family-scoped advisor workflow: ingest an event, assess its relevance, prepare a communication, apply the current review policy, hold a client conversation, update relationship understanding, and schedule useful follow-ups.
 
+The product frontend from `origin/feat/ui-front` is now connected to this local backend on the integration branch `codex/local-setup`. Open [the application](http://127.0.0.1:3000/app/); [operational diagnostics](http://127.0.0.1:3000/ops) remain available separately. The existing frontend layout and visual design are retained. Integration history and implementation boundaries are recorded in [INTEGRATION.md](INTEGRATION.md).
+
 ## Run locally
 
 Use Node.js 22.13 or newer. The backend uses Node's built-in SQLite and has no npm package dependencies.
@@ -14,9 +16,18 @@ test -f .env || cp .env.example .env
 npm start
 ```
 
-The server binds to loopback, normally `http://127.0.0.1:3000`. Open [operational diagnostics](http://127.0.0.1:3000/ops) to inspect events, jobs and provider status. `/ops` is a diagnostic surface separate from the product frontend; the backend currently also serves it at `/`. [API routes and payloads](backend/API.md) support a separately developed frontend. Local development origins on ports 3000 and 5173 are permitted; additional exact origins can be configured with `ALLOWED_ORIGINS`.
+The server binds to loopback, normally `http://127.0.0.1:3000`. The same `npm start` command serves both the API and frontend; `/` redirects to `/app/`. No frontend build or new npm dependencies are required.
 
-Choose an advisor, admin or a specific family's client session. These are local demo roles with temporary session tokens, **not production authentication**. A client session is scoped to its selected family. Session tokens expire after 12 hours and disappear when the server restarts.
+| Local URL | Session |
+| --- | --- |
+| [Advisor](http://127.0.0.1:3000/app/?role=consultor) | Shared local advisor and real stored work queue. |
+| [Administrator](http://127.0.0.1:3000/app/?role=admin) | Local configuration, audit records and integration status. |
+| [Michael's client view](http://127.0.0.1:3000/app/?role=cliente&family=michael-carter) | Selected family's plan, updates, chat and browser voice. |
+| [Diagnostics](http://127.0.0.1:3000/ops) | Events, jobs, policy, traces and provider diagnostics. |
+
+Use `family=<case-slug>` to select another supplied family, or use the family selector in the client view. Real API mode is the default. Add `?mock=1` (or `&mock=1`) only to inspect the original isolated mock UI.
+
+These are **local demo sessions, not production authentication**. Frontend bearer tokens are stored in tab-scoped `sessionStorage`, with separate role/family keys. Client API access is restricted to the selected family. Tokens expire after 12 hours and disappear from the server when it restarts. Same-origin `/app/` is the recommended setup; development origins on ports 3000 and 5173 remain permitted, with additional exact origins configurable through `ALLOWED_ORIGINS`.
 
 ## Configuration
 
@@ -58,11 +69,23 @@ Directed family events bypass relevance filtering. Global and family-set events 
 
 The assessment chooses `now`, `later`, `none` or `needs_information`, prepares a recommended channel and full conversation bundle, and proposes fact changes and follow-ups. Browser voice is the default when preferences and context allow it. In `auto`, routine eligible communications can be delivered to the local client inbox. In `manual`, every communication requires advisor approval and the advisor can choose the final channel at approval. Content requiring review remains gated in either mode. Approvals bind the draft, selected channel and facts hashes; policy and facts are checked again before delivery or conversation start.
 
-Browser voice uses real uploaded audio, ElevenLabs transcription, an OpenAI conversation reply and ElevenLabs synthesis when configured. Text works without requesting audio. Delivery and phone-like calls are simulated in the local app: there is no PSTN dialing, phone carrier integration or actual outbound telephone call. Recordings live under `var/recordings` and are accessible only through scoped conversation references.
+Browser voice uses real uploaded audio, ElevenLabs transcription, an OpenAI conversation reply and ElevenLabs synthesis when configured. Text works without requesting audio. Delivery and phone-like calls are simulated in the local app: there is no outbound email delivery, PSTN dialing, phone carrier integration or actual outbound telephone call. Recordings live under `var/recordings` and are accessible only through scoped conversation references.
 
 Acoustic/tone inference is deliberately `not_configured`, with no acoustic scores. Postanalysis uses the actual speaker-attributed transcript and optional self-report. Quotes, person scope and available transcript spans are checked; assistant speech cannot substantiate a customer observation. Textual concern is distinct from an inferred vocal state.
 
 Follow-ups with no date remain pending. Dated follow-ups generate family-scoped reevaluation events when the demo clock reaches their due time. The new assessment considers the original purpose and cancellation conditions; a scheduled event does not itself authorize another contact. SQLite transactions preserve job state and proposed effects, and the worker recovers expired leases after restart.
+
+## Frontend integration contracts
+
+The browser endpoint catalog is [ui/front/js/api/endpoints.js](ui/front/js/api/endpoints.js). Three backend adapters translate its view models into existing Store and Engine operations:
+
+- [Advisor adapter](backend/frontend-advisor.mjs) and [contract](backend/FRONTEND-ADVISOR.md): dashboard, alerts, families, history and policy.
+- [Client adapter](backend/frontend-client.mjs) and [contract](backend/FRONTEND-CLIENT.md): selected family, actual conversations, information updates and preferences.
+- [Administration adapter](backend/frontend-admin.mjs) and [contract](backend/FRONTEND-ADMIN.md): published branding, drafts, audit export, configuration and actual local workload.
+
+The frontend shows actual stored family/workflow counts. Unknown SLA or capacity metrics remain unavailable; mock figures such as 150 assigned families are not runtime measurements. Billing, account provisioning, portfolio reassignment and editable guardrails are explicitly unavailable. Implemented guardrails remain read-only. Branding uploads use JSON data URIs for PNG/JPEG/WebP up to 2 MiB; SVG and external asset URLs are rejected. Original family sources remain immutable, with authorized updates written to the versioned overlay.
+
+The [original frontend README](ui/front/README.md) is preserved as design and endpoint reference, with a current integration notice at the top. The lower-level [API contract](backend/API.md) also remains available.
 
 ## Checks
 

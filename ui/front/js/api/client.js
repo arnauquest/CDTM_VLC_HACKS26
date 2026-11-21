@@ -22,12 +22,12 @@ export class ApiError extends Error {
 }
 
 export function getToken() {
-  try { return localStorage.getItem(config.AUTH_TOKEN_KEY); } catch { return null; }
+  try { return sessionStorage.getItem(config.AUTH_TOKEN_KEY); } catch { return null; }
 }
 export function setToken(token) {
   try {
-    if (token) localStorage.setItem(config.AUTH_TOKEN_KEY, token);
-    else localStorage.removeItem(config.AUTH_TOKEN_KEY);
+    if (token) sessionStorage.setItem(config.AUTH_TOKEN_KEY, token);
+    else sessionStorage.removeItem(config.AUTH_TOKEN_KEY);
   } catch { /* storage no disponible */ }
 }
 
@@ -99,7 +99,7 @@ export async function request(method, path, options = {}) {
   if (!res.ok) {
     let details = null;
     try { details = await res.json(); } catch { /* sin cuerpo JSON */ }
-    const message = details?.message || details?.detail || `Error ${res.status}`;
+    const message = details?.message || details?.detail || details?.error || `Error ${res.status}`;
     throw new ApiError(res.status, message, details);
   }
 

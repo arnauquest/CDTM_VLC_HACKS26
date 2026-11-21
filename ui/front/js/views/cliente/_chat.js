@@ -22,14 +22,15 @@ export function mountChat(host, { advisor, startOpen = false } = {}) {
   const messages = new Map(); // id -> msg (evita duplicados entre polling y envío)
   let lastId = null;
   let timer = null;
+  let conversationId = null; let sending = false; let finishing = false; let polling = false; let disposed = false;
   let state = startOpen ? "open" : "closed"; // open | minimized | closed
 
   const el = document.createElement("section");
   el.className = "chat";
-  el.setAttribute("aria-label", "Chat con tu asesor");
+  el.setAttribute("aria-label", "Chat con el asistente virtual de tu asesor");
   el.innerHTML = html`
     <header class="chat__head">
-      <span class="chat__title">Chat con ${advisor?.name || "tu asesor"}</span>
+      <span class="chat__title">Asistente virtual de ${advisor?.name || "tu asesor"}</span>
       <button class="chat__icon-btn" data-chat="minimize" aria-label="Minimizar">${raw(icon("minus"))}</button>
       <button class="chat__icon-btn" data-chat="close" aria-label="Cerrar">${raw(icon("x"))}</button>
     </header>
@@ -40,19 +41,26 @@ export function mountChat(host, { advisor, startOpen = false } = {}) {
         <textarea id="chat-input" class="chat__input" rows="2" placeholder="Escribe tu mensaje..." maxlength="2000"></textarea>
         <button class="chat__send" type="submit" aria-label="Enviar">${raw(icon("send"))}</button>
       </form>
+      <div style="padding:10px 14px">
+        <button class="btn btn--outline-accent" data-chat="finish">Finalizar conversación</button>
+        <p data-chat-status role="status" style="font-size:12px;margin-top:6px">Cerrar o minimizar conserva la conversación. Finalízala para procesar el análisis y los seguimientos.</p>
+      </div>
     </div>`;
   host.appendChild(el);
 
   const list = el.querySelector(".chat__list");
   const input = el.querySelector(".chat__input");
+  const finishButton = el.querySelector('[data-chat=finish]'); const status = el.querySelector('[data-chat-status]');
+  const setBusy = () => { finishButton.disabled = sending || finishing; el.querySelector('.chat__send').disabled = sending || finishing; };
+  const changed = state => window.dispatchEvent(new CustomEvent('client:conversation-updated', { detail: { id: conversationId, state } }));
 
   function bubble(m) {
     const mine = m.author === "client";
     return html`
       <li class="chat__msg ${mine ? "chat__msg--me" : ""} ${m.failed ? "is-failed" : ""}" data-id="${m.id}">
-        <span class="chat__author">${mine ? "Tú" : "Asesor"}</span>
+        <span class="chat__author">${mine ? "Tú" : "Asistente virtual"}</span>
         <p class="chat__bubble">${m.text}</p>
-        <time class="chat__time" datetime="${m.createdAt}">${m.failed ? "No enviado" : fmt.relative(m.createdAt)}</time>
+        <time class="chat__time" datetime="${m.createdAt}">${m.failed ? "No enviado" : m.status === 'queued' ? 'Recibido · pendiente de análisis' : fmt.relative(m.createdAt)}</time>
       </li>`;
   }
   function renderList() {
@@ -61,13 +69,16 @@ export function mountChat(host, { advisor, startOpen = false } = {}) {
     list.scrollTop = list.scrollHeight;
   }
   function ingest(batch = []) {
-    batch.forEach((m) => { messages.set(m.id, m); lastId = m.id; });
+    if (disposed) return;
+    batch.forEach((m) => { messages.set(m.id, m); lastId = m.id; if (m.conversationId) conversationId = m.conversationId; });
     if (batch.length) renderList();
   }
 
   async function poll() {
-    if (state !== "open" || document.hidden) return;
+    if (disposed || polling || state !== "open" || document.hidden) return;
+    polling = true;
     try { ingest(await clienteApi.messages({ after: lastId })); } catch { /* reintenta en el siguiente tick */ }
+    finally { polling = false; }
   }
   function startPolling() { stopPolling(); timer = setInterval(poll, config.CHAT_POLL_MS); }
   function stopPolling() { clearInterval(timer); timer = null; }
@@ -81,29 +92,46 @@ export function mountChat(host, { advisor, startOpen = false } = {}) {
 
   async function send(text, topicId) {
     const clean = (text || "").trim();
-    if (!clean) return;
+    if (!clean || sending || finishing || disposed) return;
+    sending = true; setBusy(); status.textContent = 'Enviando tu mensaje…';
     const tempId = `tmp-${Date.now()}`;
     messages.set(tempId, { id: tempId, author: "client", text: clean, createdAt: new Date().toISOString() });
     renderList();
     try {
-      const saved = await clienteApi.sendMessage({ text: clean, topicId });
+      const saved = await clienteApi.sendMessage({ text: clean, topicId, request_id: crypto.randomUUID() });
       messages.delete(tempId);
       ingest([saved]);
+      status.textContent = saved.status === 'queued' ? 'Petición recibida y pendiente de análisis.' : 'Respuesta preparada. Finaliza cuando hayas terminado.';
+      changed('active');
+      await poll();
     } catch (err) {
       messages.set(tempId, { ...messages.get(tempId), failed: true });
       renderList();
       toast(err.message || "No se pudo enviar el mensaje", "error");
-    }
+    } finally { sending = false; if (!disposed) setBusy(); }
+  }
+
+  async function finish() {
+    if (sending || finishing || disposed) return;
+    finishing = true; setBusy(); status.textContent = 'Finalizando conversación…';
+    try {
+      const result = await clienteApi.finishConversation(conversationId ? { conversation_id: conversationId } : {});
+      if (disposed) return;
+      status.textContent = result.message; changed(result.state); await poll();
+    } catch (error) { if (!disposed) status.textContent = error.message || 'No se pudo finalizar la conversación.'; }
+    finally { finishing = false; if (!disposed) setBusy(); }
   }
 
   el.addEventListener("click", (e) => {
     const a = e.target.closest("[data-chat]")?.dataset.chat;
     if (a === "minimize") setState(state === "minimized" ? "open" : "minimized");
     if (a === "close") setState("closed");
+    if (a === "finish") finish();
     if (e.target.closest(".chat__head") && !a && state === "minimized") setState("open");
   });
   el.querySelector("form").addEventListener("submit", (e) => {
     e.preventDefault();
+    if (sending || finishing) return;
     const text = input.value;
     input.value = "";
     send(text);
@@ -119,7 +147,8 @@ export function mountChat(host, { advisor, startOpen = false } = {}) {
 
   return {
     open: () => setState("open"),
+    refresh: poll,
     send: async (text, topicId) => { setState("open"); await send(text, topicId); },
-    destroy: () => { stopPolling(); el.remove(); },
+    destroy: () => { disposed = true; stopPolling(); el.remove(); },
   };
 }

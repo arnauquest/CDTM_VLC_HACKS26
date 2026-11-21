@@ -27,7 +27,7 @@ export default {
     mountAsync(el.querySelector('[data-slot="list"]'), adminApi.guardrails, (list) =>
       list.length ? list.map((g) => html`
         <div class="setting">
-          ${raw(toggle({ id: `g-${g.id}`, name: g.id, checked: g.enabled, label: g.label }))}
+          ${raw(toggle({ id: `g-${g.id}`, name: g.id, checked: g.enabled, label: g.label, disabled: g.readOnly || g.mutable === false || g.editable === false }))}
           <div class="setting__text"><span class="setting__label">${g.label}</span><span class="setting__hint">${g.hint}</span></div>
         </div>`).join("") : emptyState("Sin guardrails configurados"),
     { skeleton: skeleton("card", 1) });

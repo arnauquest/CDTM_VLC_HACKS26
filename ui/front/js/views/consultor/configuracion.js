@@ -26,7 +26,7 @@ function render(s) {
         <h3>${sec.title}</h3>
         ${sec.rules.map((r) => html`
           <div class="setting">
-            ${raw(toggle({ id: `rule-${r.id}`, name: r.id, checked: r.enabled, label: r.label }))}
+            ${raw(toggle({ id: `rule-${r.id}`, name: r.id, checked: r.enabled, label: r.label, disabled: r.readOnly || r.mutable === false }))}
             <div class="setting__text">
               <span class="setting__label">${r.label} ${r.example ? raw(html`<span class="muted" style="font-size:var(--fs-md)">${r.example}</span>`) : ""}</span>
               ${r.hint ? raw(html`<span class="setting__hint">${r.hint}</span>`) : ""}
@@ -67,7 +67,7 @@ export default {
       settings.sections.forEach((sec) => sec.rules.forEach((r) => { if (r.id === input.name) r.enabled = input.checked; }));
     });
     const offClick = on(el, "click", '[data-action="save"]', (e, btn) =>
-      withLoading(btn, () => consultorApi.saveAutonomy(settings), { success: "Reglas guardadas" }).catch(() => {}));
+      withLoading(btn, async () => {settings = await consultorApi.saveAutonomy(settings);el.querySelector('[data-slot="body"]').innerHTML=render(settings);return settings;}, { success: "Reglas guardadas" }).catch(() => {}));
     return () => { offChange(); offClick(); };
   },
 };

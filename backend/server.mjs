@@ -1,10 +1,13 @@
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { resolve, dirname, basename } from 'node:path';
+import { resolve, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { Store } from './store.mjs';
 import { Engine } from './engine.mjs';
+import { handleFrontendAdvisor } from './frontend-advisor.mjs';
+import { handleFrontendAdmin } from './frontend-admin.mjs';
+import { handleFrontendClient } from './frontend-client.mjs';
 import { createAI } from './ai.mjs';
 import { createVoice } from './voice.mjs';
 import { createOpenAIRouterFromEnv } from '../config/openai-failover.mjs';
@@ -20,7 +23,7 @@ export function createApplication({rootDir=ROOT,env=process.env,store:injectedSt
  const safeMessage=e=>{let m=String(e.message||'Request failed');for(const [k,v]of Object.entries(env))if(v&&/KEY|TOKEN|SECRET/.test(k))m=m.split(v).join('[redacted]');return m.slice(0,600);};
  const redact=value=>{if(typeof value!=='string')return value;for(const [key,secret]of Object.entries(env))if(typeof secret==='string'&&secret&&/KEY|TOKEN|SECRET/i.test(key))value=value.split(secret).join('[redacted]');return value;};
  const send=(res,data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data,(_key,value)=>redact(value)));};
- async function body(req){let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>15*1024*1024)throw error('Request body too large',413);chunks.push(chunk);}try{const value=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{};if(!value||typeof value!=='object'||Array.isArray(value))throw error('Object body required',400);return value;}catch{throw error('Invalid JSON object body',400);}}
+ async function body(req){if(req.parsedJson)return req.parsedJson;let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>15*1024*1024)throw error('Request body too large',413);chunks.push(chunk);}try{const value=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{};if(!value||typeof value!=='object'||Array.isArray(value))throw error('Object body required',400);req.parsedJson=value;return value;}catch{throw error('Invalid JSON object body',400);}}
  function session(req){const token=req.headers.authorization?.replace(/^Bearer /,'')||req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('sherpas_session='))?.slice(16);const s=sessions.get(token);if(!s||s.expires<Date.now())throw error('Choose a local demo session first',401);return s;}
  function advisor(s){if(!['admin','advisor'].includes(s.role))throw error('Advisor access required',403);}
  function familyAccess(s,id){store.getFamily(id);if(s.role==='client'&&s.family_id!==id)throw error('This family is outside your session',403);}
@@ -32,17 +35,26 @@ export function createApplication({rootDir=ROOT,env=process.env,store:injectedSt
   const origin=req.headers.origin;
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   if(origin){if(!allowedOrigins.has(origin)){send(res,{error:'Origin not allowed'},403);return;}res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Access-Control-Allow-Credentials','true');res.setHeader('Vary','Origin');}
-  if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Methods':'GET,POST,PATCH,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization,Idempotency-Key'});res.end();return;}
+  if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Methods':'GET,POST,PATCH,PUT,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization,Idempotency-Key'});res.end();return;}
   try{
    const url=new URL(req.url,'http://localhost'),path=url.pathname.split('/').filter(Boolean);const method=req.method;
-   if(!['GET','POST','PATCH'].includes(method))throw error('Method not allowed',405);
-   if(method==='GET'&&(url.pathname==='/'||url.pathname==='/ops')){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(await readFile(resolve(rootDir,'backend/public/ops.html')));return;}
+   if(!['GET','POST','PATCH','PUT'].includes(method))throw error('Method not allowed',405);
+   if(method==='GET'&&url.pathname==='/'){res.writeHead(302,{Location:'/app/'});res.end();return;}
+   if(method==='GET'&&url.pathname==='/app'){res.writeHead(302,{Location:'/app/'});res.end();return;}
+   if(method==='GET'&&url.pathname.startsWith('/app/')){const base=resolve(rootDir,'ui/front');const file=resolve(base,decodeURIComponent(url.pathname.slice(5)||'index.html'));const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpeg':'image/jpeg','.jpg':'image/jpeg','.webp':'image/webp'}[extname(file)];if(!file.startsWith(base+'/')||!mime)throw error('Asset not found',404);let bytes;try{bytes=await readFile(file);}catch{throw error('Asset not found',404);}res.writeHead(200,{'Content-Type':mime+'; charset=utf-8','Cache-Control':'no-store'});res.end(bytes);return;}
+   if(method==='GET'&&url.pathname==='/ops'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(await readFile(resolve(rootDir,'backend/public/ops.html')));return;}
    if(url.pathname==='/api/health'&&method==='GET'){send(res,{ok:true,local_demo:true,now:store.now(),mode:store.getPolicy(),providers:{agents:ai.capabilities(),voice:voice.capabilities(),acoustic:'not_configured'},running_jobs:engine.running});return;}
    if(url.pathname==='/api/session'&&method==='POST'){const input=await body(req);if(!['admin','advisor','client'].includes(input.role))throw error('Unknown role');if(input.role==='client')store.getFamily(input.family_id);const token=randomBytes(24).toString('hex');const s={id:randomBytes(8).toString('hex'),role:input.role,family_id:input.role==='client'?input.family_id:null,expires:Date.now()+12*3600000};sessions.set(token,s);res.setHeader('Set-Cookie',`sherpas_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`);send(res,{...s,token,local_demo:true});return;}
    if(url.pathname==='/api/demo/families'&&method==='GET'){send(res,store.listFamilies().map(f=>({id:f.id,name:f.name})));return;}
+   if(method==='GET'&&url.pathname==='/api/brand'){const r=await handleFrontendAdmin({path:url.pathname,method,input:{},session:null,store,engine,voice,ai,env,rootDir,url});send(res,r.body,r.status||200);return;}
    const s=session(req);
    if(path[0]!=='api')throw error('Route not found',404);
    if(url.pathname==='/api/session'&&method==='GET'){send(res,s);return;}
+   if(url.pathname==='/api/me'&&method==='GET'){const family=s.role==='client'?store.getFamily(s.family_id):null;send(res,{id:family?.people[0]?.id||'local-advisor',name:family?.people[0]?.name||(s.role==='admin'?'Administrador local':'Asesor local'),avatarUrl:null,role:{advisor:'consultor',client:'cliente',admin:'admin'}[s.role],tenant:{id:'local-demo',name:'CDTM Valencia Hacks 2026'},family:family?{id:family.id,name:family.name}:undefined,local_demo:true});return;}
+   if(url.pathname==='/api/auth/logout'&&method==='POST'){sessions.delete(req.headers.authorization?.replace(/^Bearer /,'')||req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('sherpas_session='))?.slice(16));res.setHeader('Set-Cookie','sherpas_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');send(res,{ok:true});return;}
+   const adapterInput=method==='GET'?{}:await body(req);
+   for(const handler of [handleFrontendAdvisor,handleFrontendClient,handleFrontendAdmin]){const r=await handler({path:url.pathname,method,input:adapterInput,session:s,store,engine,voice,ai,env,rootDir,url});if(r){if(r.headers){res.writeHead(r.status||200,{'Cache-Control':'no-store',...r.headers});res.end(Buffer.isBuffer(r.body)?r.body:String(r.body));}else send(res,sanitize(r.body),r.status||200);return;}}
+
    if(url.pathname==='/api/overview'&&method==='GET'){advisor(s);send(res,{policy:store.getPolicy(),now:store.now(),families:store.listFamilies().map(f=>({id:f.id,name:f.name,version:f.version,people:f.people,relationship:f.relationship,projection_status:f.projection_status})),events:store.list('events').slice(-100),jobs:store.list('jobs').slice(-100),communications:store.list('communications').slice(-100),followups:store.list('followups').slice(-100),conversations:sanitize(store.list('conversations').slice(-50)),traces:store.list('traces').slice(-150)});return;}
    if(path[1]==='policy'){advisor(s);send(res,method==='GET'?store.getPolicy():await(async()=>{const b=await body(req);return engine.setMode(b.mode,b.expected_version);})());return;}
    if(path[1]==='families'){

@@ -21,8 +21,8 @@ function familyCard(f) {
         </div>
       </div>
       <div class="family-card__actions">
-        <a class="btn btn--accent" href="${f.planUrl || "#"}" data-family="${f.id}" data-action="plan">Abrir Plan Vivo</a>
-        <a class="btn btn--outline" href="${f.psychProfileUrl || "#"}" data-family="${f.id}" data-action="psych">Ver Perfil Psicológico</a>
+        <a class="btn btn--accent" href="${f.planUrl || "#"}" target="_blank" rel="noopener" data-family="${f.id}" data-action="plan">Abrir Plan Vivo</a>
+        <a class="btn btn--outline" href="${f.psychProfileUrl || "#"}" target="_blank" rel="noopener" data-family="${f.id}" data-action="psych">Ver Perfil y Evidencias</a>
       </div>
     </article>`;
 }
@@ -30,7 +30,7 @@ function familyCard(f) {
 export default {
   title: "Familias",
   async render(el) {
-    let status = "needs_approval";
+    let status = "all";
     let q = "";
     let summary = null;
 
