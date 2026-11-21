@@ -21,6 +21,7 @@ export const DEFAULT_BRAND = Object.freeze({
   appName: "sherpas",
   tenantName: "",
   logoUrl: null,
+  logoInverseUrl: null,
   iconUrl: null,
   colors: { primary: "#0F2942", accent: "#10B981" },
   fontFamily: null,
@@ -39,6 +40,7 @@ export function normalizeBrand(raw = {}) {
     appName: raw.appName ?? raw.app_name ?? raw.name ?? DEFAULT_BRAND.appName,
     tenantName: raw.tenantName ?? raw.tenant_name ?? DEFAULT_BRAND.tenantName,
     logoUrl: raw.logoUrl ?? raw.logo_url ?? null,
+    logoInverseUrl: raw.logoInverseUrl ?? raw.logo_inverse_url ?? null,
     iconUrl: raw.iconUrl ?? raw.icon_url ?? null,
     colors: {
       primary: colors.primary ?? raw.primaryColor ?? raw.primary_color ?? DEFAULT_BRAND.colors.primary,
@@ -141,10 +143,14 @@ export async function initBrand() {
 /**
  * HTML del logo: <img> si hay logoUrl, si no wordmark de texto con appName.
  * @param {object} [brand] por defecto la marca activa
- * @param {{ size?: "sm"|"md", variant?: "logo"|"icon" }} [opts]
+ * variant: "logo" (fondo claro) | "inverse" (fondo oscuro, p.ej. cabecera del
+ * área de cliente; usa logoInverseUrl y si no hay, logoUrl) | "icon".
+ * @param {{ size?: "sm"|"md", variant?: "logo"|"inverse"|"icon" }} [opts]
  */
 export function renderLogo(brand = current, { size = "md", variant = "logo" } = {}) {
-  const url = variant === "icon" ? brand.iconUrl || brand.logoUrl : brand.logoUrl;
+  const url = variant === "icon" ? brand.iconUrl || brand.logoUrl
+    : variant === "inverse" ? brand.logoInverseUrl || brand.logoUrl
+    : brand.logoUrl;
   if (url) {
     return `<img class="brand-logo ${size === "sm" ? "brand-logo--sm" : ""}" src="${escapeHtml(url)}" alt="${escapeHtml(brand.appName)}" />`;
   }

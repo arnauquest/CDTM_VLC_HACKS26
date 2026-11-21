@@ -1,0 +1,161 @@
+/* =========================================================================
+   ÁREA DE CLIENTE (rol "cliente" / familia)
+   Layout sin sidebar: cabecera superior con el color primario de la marca.
+   Todo color de marca sale de las variables --brand-* (white-label).
+   ========================================================================= */
+
+.client-app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------- CABECERA ---------- */
+.client-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  min-height: 72px;
+  padding: var(--sp-2) var(--sp-8);
+  background: var(--brand-primary);
+  color: var(--brand-primary-contrast);
+}
+.client-header__brand { display: flex; align-items: center; gap: var(--sp-2); text-decoration: none; padding-right: var(--sp-6); border-right: 1px solid color-mix(in srgb, var(--brand-primary-contrast) 20%, transparent); }
+.client-header .wordmark { color: var(--brand-primary-contrast); font-size: 2rem; }
+.client-header__area {
+  padding: 6px 18px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-primary-contrast) 72%, transparent);
+  color: var(--brand-primary);
+  font-size: var(--fs-lg);
+  white-space: nowrap;
+}
+.client-header__actions { margin-left: auto; display: flex; align-items: center; gap: var(--sp-4); }
+.client-header__hello { font-size: var(--fs-lg); }
+.client-header__user { display: flex; align-items: center; gap: var(--sp-3); }
+.client-header__who { display: flex; flex-direction: column; line-height: 1.2; }
+.client-header__name { font-size: var(--fs-lg); }
+.client-header__family { opacity: 0.8; font-size: var(--fs-sm); }
+.client-header .bell { color: var(--brand-primary-contrast); }
+.client-header .bell:hover { background: color-mix(in srgb, var(--brand-primary-contrast) 12%, transparent); }
+.client-header .bell__badge { border-color: var(--brand-primary); }
+.client-header .avatar { box-shadow: 0 0 0 2px var(--brand-primary-contrast); }
+
+/* ---------- CONTENIDO ---------- */
+.client-content { width: 100%; max-width: 1560px; margin: 0 auto; padding: var(--sp-10) var(--sp-8); }
+.client-grid { display: grid; grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); gap: var(--sp-10); align-items: start; }
+.client-divider { align-self: stretch; background: var(--c-border-strong); }
+.client-col { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
+.client-col h1 { color: var(--c-text); font-weight: var(--fw-semibold); }
+
+.client-section { display: flex; flex-direction: column; gap: var(--sp-4); }
+.client-section__head { display: flex; align-items: center; gap: var(--sp-4); justify-content: space-between; }
+.client-section__title { color: var(--c-text); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+h2.client-section__title { font-size: var(--fs-2xl); }
+.client-section__body[hidden] { display: none; }
+
+/* ---------- TARJETAS DEL PLAN ---------- */
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-5); }
+.plan-card { display: flex; flex-direction: column; gap: var(--sp-3); min-height: 200px; }
+.plan-card__title { color: var(--c-text); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.plan-card__title--sm { font-size: var(--fs-lg); }
+.plan-card__items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-lg); }
+.plan-card__viz { flex: 1; min-height: 90px; }
+.plan-card__caption { color: var(--c-text); }
+
+.trajectory { width: 100%; height: 100%; min-height: 90px; display: block; overflow: visible; }
+.trajectory__rest { fill: var(--c-neutral-soft); }
+.trajectory__area { fill: var(--brand-accent-strong); }
+.trajectory__line { fill: none; stroke: var(--brand-primary); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.trajectory__future { fill: none; stroke: var(--c-border-strong); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.trajectory__dot { fill: #fff; stroke: var(--brand-primary); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+
+/* Barra de meta: relleno + porcentaje justo a su derecha */
+.goal-bar { display: flex; align-items: center; height: 56px; margin: var(--sp-3) 0; border-radius: var(--radius-sm); background: var(--c-neutral-soft); overflow: hidden; }
+.goal-bar__fill { height: 100%; min-width: 8px; flex: none; background: var(--brand-accent-strong); }
+.goal-bar__label { margin-left: var(--sp-3); font-size: var(--fs-xl); font-weight: var(--fw-semibold); color: var(--c-text); }
+
+/* ---------- FORMULARIO AÑADIR INFO ---------- */
+.update-form { display: flex; flex-direction: column; gap: var(--sp-5); }
+.update-form__title { color: var(--c-text); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.update-form__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-4); }
+.update-form .input { background: var(--c-surface); min-height: 52px; font-size: var(--fs-lg); }
+.btn--wide { width: 100%; min-height: 52px; border-radius: var(--radius-sm); font-size: var(--fs-lg); }
+
+/* ---------- CENTRO DE CONTACTO ---------- */
+.advisor { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-lg); }
+.quick-topics { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+.quick-topic { border-radius: var(--radius-sm); color: var(--c-text); font-weight: var(--fw-semibold); font-size: var(--fs-lg); white-space: normal; text-align: left; }
+.quick-topic svg { color: var(--brand-accent-strong); }
+
+.live-chat { display: flex; align-items: center; gap: var(--sp-5); }
+.live-chat__text { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-4); }
+.live-chat__icon { color: var(--brand-primary); }
+.live-chat__icon svg { width: 96px; height: 96px; color: var(--brand-primary); }
+.live-chat__icon svg path:last-child { fill: var(--brand-accent-strong); stroke: none; }
+
+.call-request__text { font-size: var(--fs-lg); }
+.call-request__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: center; }
+.call-request__slot { grid-column: 2; display: flex; align-items: center; gap: var(--sp-3); grid-row: 1; }
+.call-request__cal { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border: 1.5px solid var(--c-border-strong); border-radius: var(--radius-sm); color: var(--brand-primary); }
+.call-request__cal svg { width: 26px; height: 26px; }
+.call-request__slot .select { background-color: var(--c-surface); min-height: 48px; font-size: var(--fs-lg); }
+.call-request__grid [data-action="call-asap"] { grid-column: 1; grid-row: 2; border-radius: var(--radius-sm); }
+.call-request__grid [data-action="call-slot"] { grid-column: 2; grid-row: 2; border-radius: var(--radius-sm); }
+
+/* ---------- CHAT FLOTANTE ---------- */
+.chat {
+  position: fixed;
+  right: var(--sp-6);
+  bottom: var(--sp-6);
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+.chat[data-state="closed"] { display: none; }
+.chat[data-state="minimized"] .chat__body { display: none; }
+.chat[data-state="minimized"] .chat__head { cursor: pointer; }
+.chat__head { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--brand-primary); color: var(--brand-primary-contrast); }
+.chat__title { flex: 1; font-size: var(--fs-lg); }
+.chat__icon-btn { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: none; color: inherit; }
+.chat__icon-btn:hover { background: color-mix(in srgb, var(--brand-primary-contrast) 15%, transparent); }
+.chat__icon-btn svg { width: 20px; height: 20px; }
+.chat__body { display: flex; flex-direction: column; }
+.chat__list { list-style: none; margin: 0; padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); max-height: min(360px, 50vh); min-height: 160px; overflow-y: auto; }
+.chat__msg { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: 85%; }
+.chat__msg--me { align-self: flex-end; align-items: flex-end; }
+.chat__author { font-size: var(--fs-sm); color: var(--c-text); }
+.chat__bubble { padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm); background: var(--c-neutral-soft); white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat__msg--me .chat__bubble { background: var(--brand-accent-strong); color: var(--brand-accent-contrast); }
+.chat__msg.is-failed .chat__bubble { opacity: 0.6; }
+.chat__time { font-size: var(--fs-xs); color: var(--c-text-subtle); }
+.chat__msg.is-failed .chat__time { color: var(--c-danger-text); }
+.chat__empty { color: var(--c-text-muted); text-align: center; margin: auto; }
+.chat__form { position: relative; margin: 0 var(--sp-4) var(--sp-4); }
+.chat__input { width: 100%; min-height: 72px; resize: none; padding: var(--sp-3) 56px var(--sp-3) var(--sp-3); border: 1px solid var(--c-border-strong); border-radius: var(--radius-sm); font-size: var(--fs-md); }
+.chat__input:focus { outline: none; border-color: var(--brand-accent); box-shadow: var(--focus-ring); }
+.chat__send { position: absolute; right: 10px; bottom: 10px; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 6px; background: var(--brand-accent-strong); color: var(--brand-accent-contrast); }
+.chat__send svg { width: 20px; height: 20px; }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1100px) {
+  .client-grid { grid-template-columns: minmax(0, 1fr); }
+  .client-divider { display: none; }
+}
+@media (max-width: 900px) {
+  .client-header { padding: var(--sp-2) var(--sp-4); gap: var(--sp-3); flex-wrap: wrap; }
+  .client-header__brand { border-right: 0; padding-right: 0; }
+  .client-header__hello, .client-header__who { display: none; }
+  .client-content { padding: var(--sp-6) var(--sp-4); }
+}
+@media (max-width: 640px) {
+  .client-header__area { order: 3; width: 100%; text-align: center; font-size: var(--fs-md); }
+  .call-request__grid { grid-template-columns: minmax(0, 1fr); }
+  .call-request__slot, .call-request__grid [data-action] { grid-column: 1; grid-row: auto; }
+  .chat { right: var(--sp-4); bottom: var(--sp-4); }
+  .live-chat__icon svg { width: 64px; height: 64px; }
+}

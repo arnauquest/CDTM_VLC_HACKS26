@@ -1,15 +1,22 @@
 /**
- * SHELL: sidebar + topbar. Se repinta solo cuando cambia la marca o la sesión;
- * el contenido de cada vista va dentro de #outlet.
+ * SHELL: estructura fija alrededor de las vistas. El contenido de cada vista
+ * va dentro de #outlet. Hay dos layouts:
+ *   - "panel"  (consultor y admin): sidebar + topbar.
+ *   - "client" (cliente/familia):   cabecera superior oscura, sin sidebar.
+ * Se repinta solo cuando cambia la marca o la sesión.
  */
 import { config } from "./config.js";
 import { getBrand, renderLogo } from "./brand.js";
-import { navFor, ROLES } from "./routes.js";
+import { navFor, ROLES, LAYOUT_BY_ROLE } from "./routes.js";
 import { notificationsApi, sessionApi } from "./api/endpoints.js";
 import { html, raw, $, $$ } from "./ui/dom.js";
 import { icon } from "./ui/icons.js";
 import { avatar } from "./ui/components.js";
 import { setToken } from "./api/client.js";
+
+const capitalize = (s = "") => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ======================== LAYOUT PANEL (consultor / admin) ======================== */
 
 function navLink(r) {
   return html`
@@ -31,14 +38,10 @@ function sidebarHtml(session) {
         ${raw(renderLogo(brand))}
         ${isAdmin ? raw(`<span class="brand-suffix">admin</span>`) : ""}
       </a>
-      ${isAdmin ? raw(`<span class="role-pill">${brand.appName ? brand.appName.charAt(0).toUpperCase() + brand.appName.slice(1) : ""} Admin</span>`) : ""}
+      ${isAdmin ? raw(html`<span class="role-pill">${capitalize(brand.appName)} Admin</span>`) : ""}
       <nav class="sidebar__nav">${main.map(navLink)}</nav>
       <div class="sidebar__footer">
         ${footer.map(navLink)}
-        ${config.USE_MOCKS ? raw(html`
-          <button class="nav-item" type="button" data-action="switch-role" title="Solo en modo mock">
-            ${raw(icon("swap"))}<span>Ver como ${isAdmin ? "consultor" : "admin"}</span>
-          </button>`) : ""}
         <button class="nav-item" type="button" data-action="logout">${raw(icon("logout"))}<span>Cerrar sesión</span></button>
       </div>
     </aside>`;
@@ -51,16 +54,14 @@ function topbarHtml(session) {
       <button class="bell topbar__menu" type="button" data-action="toggle-nav" aria-label="Abrir menú" aria-controls="sidebar">${raw(icon("menu"))}</button>
       <span class="topbar__title">${brand.tenantName || session.tenant?.name || ""}</span>
       <div class="topbar__actions">
-        <button class="bell" type="button" aria-label="Notificaciones" data-action="notifications">
-          ${raw(icon("bell"))}<span class="bell__badge" hidden></span>
-        </button>
+        ${raw(bellHtml())}
         ${raw(avatar(session.name, session.avatarUrl, "sm"))}
       </div>
     </header>`;
 }
 
-export function renderShell(root, session) {
-  root.innerHTML = html`
+function panelLayout(session) {
+  return html`
     <div class="app" id="app">
       ${raw(sidebarHtml(session))}
       <div class="scrim" data-action="toggle-nav"></div>
@@ -68,19 +69,78 @@ export function renderShell(root, session) {
         ${raw(topbarHtml(session))}
         <main class="content" id="outlet" tabindex="-1"></main>
       </div>
-    </div>
-    ${config.USE_MOCKS ? raw('<div class="mock-banner">MODO MOCK · datos de ejemplo</div>') : ""}`;
+    </div>`;
+}
 
-  const app = $("#app", root);
-  app.addEventListener("click", async (e) => {
-    const action = e.target.closest("[data-action]")?.dataset.action;
-    if (action === "toggle-nav") app.classList.toggle("is-nav-open");
-    if (action === "switch-role") {
+/* ======================== LAYOUT CLIENTE (familia) ======================== */
+
+function clientHeaderInner(session) {
+  const brand = getBrand();
+  const firstName = (session.name || "").split(" ")[0];
+  return html`
+    <a class="client-header__brand" href="#/" aria-label="${brand.appName} - inicio">
+      ${raw(renderLogo(brand, { variant: "inverse" }))}
+    </a>
+    <span class="client-header__area">Área de Cliente: Familia</span>
+    <div class="client-header__actions">
+      <span class="client-header__hello">Hola ${firstName}</span>
+      <div class="client-header__user">
+        ${raw(avatar(session.name, session.avatarUrl, "sm"))}
+        <div class="client-header__who">
+          <span class="client-header__name">${session.name}</span>
+          ${session.family?.name ? raw(html`<span class="client-header__family">${session.family.name}</span>`) : ""}
+        </div>
+      </div>
+      ${raw(bellHtml())}
+      <button class="bell" type="button" data-action="logout" aria-label="Cerrar sesión" title="Cerrar sesión">${raw(icon("logout"))}</button>
+    </div>`;
+}
+
+function clientLayout(session) {
+  return html`
+    <div class="client-app" id="app">
+      <header class="client-header">${raw(clientHeaderInner(session))}</header>
+      <main class="client-content" id="outlet" tabindex="-1"></main>
+    </div>`;
+}
+
+/* ======================== COMÚN ======================== */
+
+function bellHtml() {
+  return html`
+    <button class="bell" type="button" aria-label="Notificaciones" data-action="notifications">
+      ${raw(icon("bell"))}<span class="bell__badge" hidden></span>
+    </button>`;
+}
+
+/** Solo en modo mock: banner con conmutador de rol para revisar los 3 perfiles. */
+function mockBanner(session) {
+  const roles = [ROLES.CONSULTOR, ROLES.ADMIN, ROLES.CLIENTE];
+  return html`
+    <div class="mock-banner">MODO MOCK · ver como:
+      ${roles.map((r) => (r === session.role
+        ? raw(html`<b>${r}</b>`)
+        : raw(html`<button type="button" data-switch-role="${r}">${r}</button>`)))}
+    </div>`;
+}
+
+export function renderShell(root, session) {
+  const layout = LAYOUT_BY_ROLE[session.role] || "panel";
+  root.innerHTML = (layout === "client" ? clientLayout(session) : panelLayout(session))
+    + (config.USE_MOCKS ? mockBanner(session) : "");
+
+  root.addEventListener("click", async (e) => {
+    const switchTo = e.target.closest("[data-switch-role]")?.dataset.switchRole;
+    if (switchTo) {
       const url = new URL(window.location.href);
-      url.searchParams.set("role", session.role === ROLES.ADMIN ? ROLES.CONSULTOR : ROLES.ADMIN);
+      url.searchParams.set("role", switchTo);
       url.hash = "";
       window.location.href = url.toString();
+      return;
     }
+    const app = $("#app", root);
+    const action = e.target.closest("[data-action]")?.dataset.action;
+    if (action === "toggle-nav") app.classList.toggle("is-nav-open");
     if (action === "logout") {
       try { await sessionApi.logout(); } catch { /* ignore */ }
       setToken(null);
@@ -93,7 +153,7 @@ export function renderShell(root, session) {
   return $("#outlet", root);
 }
 
-/** Repinta solo las partes del shell que dependen de la marca (logo, tenant, pill admin). */
+/** Repinta solo las partes del shell que dependen de la marca. */
 export function updateShellBrand(session) {
   const brand = getBrand();
   const brandEl = $(".sidebar__brand");
@@ -101,9 +161,11 @@ export function updateShellBrand(session) {
     brandEl.innerHTML = renderLogo(brand) + (session.role === ROLES.ADMIN ? `<span class="brand-suffix">admin</span>` : "");
   }
   const pill = $(".role-pill");
-  if (pill) pill.textContent = `${brand.appName.charAt(0).toUpperCase()}${brand.appName.slice(1)} Admin`;
+  if (pill) pill.textContent = `${capitalize(brand.appName)} Admin`;
   const title = $(".topbar__title");
   if (title) title.textContent = brand.tenantName || session.tenant?.name || "";
+  const clientBrand = $(".client-header__brand");
+  if (clientBrand) clientBrand.innerHTML = renderLogo(brand, { variant: "inverse" });
 }
 
 /** Marca como activo el item de nav correspondiente a la ruta. */
@@ -122,7 +184,6 @@ export async function refreshNotifications() {
   try {
     const { unread } = await notificationsApi.count();
     badge.hidden = !unread;
-    // En la maqueta de consultor es solo un punto; en admin muestra el número.
     if (unread) { badge.dataset.count = unread; badge.textContent = unread > 9 ? "9+" : unread; }
   } catch { badge.hidden = true; }
 }

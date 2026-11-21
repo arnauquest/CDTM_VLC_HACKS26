@@ -1,6 +1,12 @@
-# Front · Perfiles Consultor y Administrador
+# Front · Perfiles Consultor, Administrador y Cliente
 
-Interfaz gráfica (HTML + CSS + JavaScript vanilla, **sin build ni dependencias**) para los perfiles de **consultor** y **administrador de empresa**, construida a partir de las maquetas de [`UI_mock/`](../../UI_mock).
+Interfaz gráfica (HTML + CSS + JavaScript vanilla, **sin build ni dependencias**) para los tres perfiles de la plataforma, construida a partir de las maquetas de [`UI_mock/`](../../UI_mock):
+
+| Perfil | Quién es | Layout | Maquetas |
+|---|---|---|---|
+| `consultor` | Asesor financiero que gestiona su cartera de familias | Panel (sidebar + topbar) | `UI_mock/profile_consultor/` |
+| `admin` | Administrador de la empresa asesora | Panel (sidebar + topbar) | `UI_mock/profile_admin/` |
+| `cliente` | Miembro de una familia asesorada (web del cliente) | Cabecera superior, sin sidebar | `UI_mock/profile_client/` |
 
 > **Principios del diseño**
 > 1. **Cero datos hardcodeados en las vistas.** Todo dato sale de un endpoint del backend (`js/api/endpoints.js`). Mientras el backend no esté listo, unos **mocks** separados responden con el mismo formato.
@@ -25,6 +31,7 @@ Interfaz gráfica (HTML + CSS + JavaScript vanilla, **sin build ni dependencias*
 12. [Cómo añadir una vista nueva](#12-cómo-añadir-una-vista-nueva)
 13. [Checklist de integración con backend](#13-checklist-de-integración-con-backend)
 14. [Decisiones tomadas y puntos abiertos](#14-decisiones-tomadas-y-puntos-abiertos)
+15. [Área de cliente (web de la familia) en detalle](#15-área-de-cliente-web-de-la-familia-en-detalle)
 
 ---
 
@@ -43,9 +50,10 @@ Alternativas: `python3 -m http.server 5173` o `npx serve .` (pueden cachear los 
 |---|---|
 | `http://localhost:5173/` | Perfil **consultor** con datos mock |
 | `http://localhost:5173/?role=admin` | Perfil **administrador** con datos mock |
+| `http://localhost:5173/?role=cliente` | **Área de cliente** (familia) con datos mock |
 | `http://localhost:5173/?mock=0` | Desactiva mocks → llama al backend real (`API_BASE_URL`) |
 
-En modo mock aparece abajo una etiqueta **"MODO MOCK · datos de ejemplo"** y en la sidebar un botón **"Ver como admin / consultor"** para alternar perfil. Ninguno de los dos existe con `USE_MOCKS=false`.
+En modo mock aparece abajo a la izquierda una etiqueta **"MODO MOCK · ver como: consultor · admin · cliente"** que permite saltar entre los tres perfiles. No existe con `USE_MOCKS=false`.
 
 ---
 
@@ -61,14 +69,15 @@ ui/front/
 │   ├── base.css               # Reset, tipografía, utilidades
 │   ├── layout.css             # Sidebar, topbar, contenido, grids, responsive
 │   ├── components.css         # Botones, KPI, chips, tags, avatar, toggle, inputs, stepper, player, modal, toast...
-│   └── views.css              # Estilos específicos de cada pantalla
+│   ├── views.css              # Estilos específicos de pantallas de consultor/admin
+│   └── cliente.css            # Layout y pantallas del área de cliente (cabecera, tarjetas del plan, chat)
 └── js/
     ├── config.js              # URLs y flags de entorno (único sitio)
     ├── main.js                # Arranque: marca → sesión → shell → router
     ├── brand.js               # White-label: normaliza y aplica la marca
     ├── routes.js              # Rutas, roles y nav
     ├── router.js              # Router por hash (#/ruta) con guardia de rol
-    ├── shell.js               # Sidebar + topbar
+    ├── shell.js               # Layout "panel" (sidebar + topbar) y layout "client" (cabecera)
     ├── api/
     │   ├── client.js          # fetch wrapper (token, JSON/FormData, errores, timeout, mocks)
     │   ├── endpoints.js       # ← CATÁLOGO DE ENDPOINTS (contrato con backend)
@@ -81,7 +90,8 @@ ui/front/
     │   └── components.js      # Componentes de presentación + toast/modal/mountAsync
     └── views/
         ├── consultor/         # inicio, familias, alertas, alerta-detalle, historial, plantillas, configuracion
-        └── admin/             # resumen, usuarios, marca, gobernanza, integraciones
+        ├── admin/             # resumen, usuarios, marca, gobernanza, integraciones
+        └── cliente/           # mi-plan (pantalla única) + _plan-cards.js (tarjetas) + _chat.js (chat flotante)
 ```
 
 ---
@@ -92,8 +102,8 @@ ui/front/
 index.html
   └─ js/main.js
        1. initBrand()        → aplica marca cacheada (localStorage) y luego GET /brand
-       2. sessionApi.me()    → GET /me  → { role: "consultor" | "admin", ... }
-       3. renderShell()      → sidebar + topbar según rol y marca
+       2. sessionApi.me()    → GET /me  → { role: "consultor" | "admin" | "cliente", ... }
+       3. renderShell()      → layout según rol (LAYOUT_BY_ROLE): "panel" o "client"
        4. startRouter()      → pinta la vista de la ruta (#/...) dentro de <main id="outlet">
 ```
 
@@ -116,7 +126,8 @@ Archivo: [`js/config.js`](js/config.js)
 | `REQUEST_TIMEOUT_MS` | `15000` | Timeout de peticiones reales |
 | `AUTH_TOKEN_KEY` | `sherpas.token` | Clave en `localStorage` del token Bearer |
 | `BRAND_CACHE_KEY` | `sherpas.brand` | Cache de la marca para evitar parpadeo al cargar |
-| `MOCK_ROLE` | `consultor` | Rol simulado (o `?role=admin`) |
+| `MOCK_ROLE` | `consultor` | Rol simulado (o `?role=admin` / `?role=cliente`) |
+| `CHAT_POLL_MS` | `5000` | Frecuencia de consulta de mensajes nuevos en el chat del cliente |
 | `LOCALE` / `CURRENCY` | `es-ES` / `USD` | Formateo de números, fechas y moneda (`Intl`) |
 
 Se pueden sobrescribir **sin tocar código** declarando antes de `main.js` en `index.html`:
@@ -127,7 +138,7 @@ Se pueden sobrescribir **sin tocar código** declarando antes de `main.js` en `i
 </script>
 ```
 
-Y en desarrollo con query params: `?mock=0|1`, `?role=admin|consultor`.
+Y en desarrollo con query params: `?mock=0|1`, `?role=consultor|admin|cliente`.
 
 ---
 
@@ -142,8 +153,9 @@ Todo lo que es marca se resuelve en **runtime**. Archivo: [`js/brand.js`](js/bra
 | Nombre del producto | `appName` | Wordmark de texto (si no hay logo), título de pestaña, píldora "X Admin", migas, textos ("Define qué acciones ejecuta **X**…") |
 | Nombre del tenant/empresa | `tenantName` | Topbar ("CDTM Valencia Hacks 2026"), título de pestaña |
 | Logo principal | `logoUrl` | Sidebar, cabecera del email de previsualización |
+| Logo para fondo oscuro | `logoInverseUrl` (opcional) | Cabecera del área de cliente (fondo = color primario). Si falta se usa `logoUrl`; sin logo, wordmark de texto en el color de contraste |
 | Isotipo / icono | `iconUrl` | Favicon, icono de la notificación móvil |
-| Color primario | `colors.primary` | Nav activo, títulos, botones contorno/primarios, barra del email |
+| Color primario | `colors.primary` | Nav activo, títulos, botones contorno/primarios, barra del email, **cabecera del área de cliente y del chat** |
 | Color de acento | `colors.accent` | CTAs, toggles, chips activos, KPIs, reproductor de audio |
 | Tipografía | `fontFamily` + `fontUrl` | Toda la app (se inyecta `<link>` a la hoja de la fuente) |
 | Texto legal | `legalFooter` | Pie de los emails al cliente |
@@ -198,7 +210,7 @@ Vista  ──►  endpoints.js (consultorApi / adminApi / brandApi / …)  ─�
 
 | Método | Ruta | Respuesta / cuerpo |
 |---|---|---|
-| GET | `/me` | `{ id, name, avatarUrl, role: "consultor"\|"admin", tenant: { id, name } }` |
+| GET | `/me` | `{ id, name, avatarUrl, role: "consultor"\|"admin"\|"cliente", tenant: { id, name }, family?: { id, name } }` (`family` solo para `cliente`) |
 | POST | `/auth/logout` | — |
 | GET | `/brand` | `Brand` (abajo) |
 | PUT | `/brand/draft` | body `Brand` |
@@ -211,7 +223,7 @@ Vista  ──►  endpoints.js (consultorApi / adminApi / brandApi / …)  ─�
 ```ts
 Brand = {
   appName: string; tenantName: string;
-  logoUrl: string|null; iconUrl: string|null;
+  logoUrl: string|null; logoInverseUrl?: string|null; iconUrl: string|null;
   colors: { primary: "#RRGGBB"; accent: "#RRGGBB" };
   fontFamily: string|null; fontUrl: string|null;
   legalFooter: string; voiceProfileId: string|null; integrationActive: boolean;
@@ -293,7 +305,34 @@ ConsultantWorkload = { id; name; title; avatarUrl; familiesAssigned; capacity; s
 TeamMember = { id; name; avatarUrl; role: "consultor"|"admin"; roleLabel; scopeLabel|null; familiesAssigned|null }
 ```
 
-### 7.4 Convenciones
+### 7.4 Cliente (familia)
+
+| Método | Ruta | Respuesta / cuerpo |
+|---|---|---|
+| GET | `/client/plan` | `{ cards: PlanCard[] }` |
+| GET | `/client/financial-updates/fields` | `[{ id, label, placeholder?, type? }]` (campos de "Añadir info") |
+| POST | `/client/financial-updates` | `{ [fieldId]: string }` |
+| GET | `/client/advisor` | `{ id, name, avatarUrl, title }` |
+| GET | `/client/quick-topics` | `[{ id, label, icon: "help"\|"pencil" }]` |
+| GET | `/client/chat/messages?after=<id>` | `ChatMessage[]` (solo los posteriores a `after`; sin `after`, historial completo) |
+| POST | `/client/chat/messages` | `{ text, topicId? }` → `ChatMessage` |
+| GET | `/client/call-slots` | `[{ id, label, start: ISODate }]` |
+| POST | `/client/call-requests` | `{ slotId }` (programada) o `{ asap: true }` (lo antes posible) |
+| GET / PUT | `/client/preferences` | `{ sections: { updateData: bool, askInfo: bool, callRequest: bool } }` |
+| GET | `/notifications/count` | (compartido) `{ unread }` |
+
+```ts
+PlanCard =
+  | { id; type: "list"; title: string; items: { label: string; value?: number; format?: "money"|"money_k"|"number"|"percent" }[] }
+  | { id; type: "goal"; kind: "trajectory"; title; caption?; progress: number /*0-1*/; series?: number[] /*0-1, opcional*/ }
+  | { id; type: "goal"; kind: "progress";   title; caption?; progress: number /*0-1*/; valueLabel?: string }
+
+ChatMessage = { id: string; author: "client"|"advisor"; text: string; createdAt: ISODate }
+```
+
+> El backend **decide qué tarjetas** aparecen en el plan y en qué orden (patrimonio, miembros de la familia, metas…). El front solo sabe pintar cada `type`. Un tipo desconocido se ignora con un aviso en consola.
+
+### 7.5 Convenciones
 
 - Fechas en **ISO 8601 UTC**; el front las formatea con `Intl` (`fmt.date`, `fmt.relative`).
 - Porcentajes como **ratio 0–1** (`silenceRate: 0.88` → "88%").
@@ -321,8 +360,10 @@ Archivo: [`js/routes.js`](js/routes.js). Router por hash (`#/ruta`) — funciona
 | `#/admin/marca` | Imagen de marca | | ✔ | Imagen de Marca |
 | `#/admin/gobernanza` | Guardrails IA | | ✔ | Gobernanza y Compliance |
 | `#/admin/integraciones` | Integraciones + plan | | ✔ | Integraciones y Facturación |
+| `#/mi-plan` | Área de cliente (plan + contacto con asesor) | | | — (solo rol **cliente**, sin sidebar) |
 
-- **Guardia de rol**: una ruta no permitida (o inexistente) redirige a la home del rol (`/inicio` o `/admin/resumen`).
+- **Guardia de rol**: una ruta no permitida (o inexistente) redirige a la home del rol (`/inicio`, `/admin/resumen` o `/mi-plan`). Un cliente nunca puede abrir vistas de consultor/admin y viceversa.
+- **Layout por rol** (`LAYOUT_BY_ROLE` en `routes.js`): `consultor` y `admin` usan el layout *panel*; `cliente` usa el layout *client* (ver §15).
 - El admin ve también las vistas operativas (Familias, Alertas, Historial, Plantillas) en modo supervisión, como aparece en la maqueta de *Usuarios y Roles*.
 - ⚠ La guardia del front es **solo UX**: el backend debe validar permisos en cada endpoint.
 
@@ -350,6 +391,12 @@ Archivo: [`js/routes.js`](js/routes.js). Router por hash (`#/ruta`) — funciona
 | `profile_admin/imagen_marca.jpeg` | `views/admin/marca.js` | Ver §5.4. Subida de logo e isotipo, nombre, tenant, colores (texto hex + selector nativo), texto legal, perfil de voz; vista previa **Email** / **Notificación Móvil**; *Restaurar por Defectos*, *Guardar Borrador* (se activa al haber cambios), *Publicar Cambios de Marca* |
 | `profile_admin/compliance.jpeg` (bloque superior) | `views/admin/gobernanza.js` | Guardrails de IA con toggle que se guarda al momento (revierte si falla) |
 | `profile_admin/compliance.jpeg` (bloques inferiores) | `views/admin/integraciones.js` | Integraciones (estado, *Verificar conexión*, *Configurar API*); plan corporativo con barra de asientos usados, renovación, *Añadir Asiento*, *Descargar Facturas* |
+
+### Cliente
+
+| Maqueta | Vista | Qué hace |
+|---|---|---|
+| `profile_client/UI_cliente.jpeg` | `views/cliente/mi-plan.js` (+ `_plan-cards.js`, `_chat.js`) | Pantalla única de dos columnas: **Mi Plan y Datos Financieros** (tarjetas del plan, formulario *Añadir info* → *Guardar y Actualizar*) y **Centro de Contacto con mi Asesor** (atajos de preguntas, chat en vivo, solicitud/programación de llamada). Detalle en §15 |
 
 ---
 
@@ -396,6 +443,7 @@ Iconos: [`js/ui/icons.js`](js/ui/icons.js), SVG inline de trazo que heredan `cur
 - ≤ 1100 px: grids a una columna, editor de marca apilado, acciones de fila debajo.
 - ≤ 900 px: sidebar como cajón (botón ☰ en la topbar).
 - ≤ 640 px: stepper vertical, filas de carga/equipo en una columna. Sin scroll horizontal a 375 px.
+- Área de cliente: dos columnas ≥ 1100 px; una columna por debajo; ≤ 900 px la cabecera oculta saludo y nombre (queda el avatar) y ≤ 640 px la píldora "Área de Cliente" pasa a su propia línea. El chat flotante se adapta al ancho (`min(380px, 100vw - 32px)`).
 
 ---
 
@@ -428,6 +476,8 @@ Iconos: [`js/ui/icons.js`](js/ui/icons.js), SVG inline de trazo que heredan `cur
 - [ ] Configurar `API_BASE_URL` y `USE_MOCKS: false` (en `config.js` o `window.__APP_CONFIG__`).
 - [ ] CORS en backend para el origen del front (y `Access-Control-Allow-Credentials` si se usan cookies).
 - [ ] Autenticación: pantalla de login / SSO (pendiente, ver `TODO(auth)` en `main.js`), y llamar a `setToken()` tras login.
+- [ ] Chat del cliente: confirmar si habrá WebSocket/SSE; si no, el polling con `?after=<id>` debe devolver solo mensajes nuevos y ser barato. Ajustar `CHAT_POLL_MS`.
+- [ ] Definir qué hace backend con `POST /client/financial-updates` (¿genera alerta al consultor? ¿revisión antes de tocar el plan?).
 - [ ] Servir audios de llamada (`call.audioUrl`) con CORS y `Content-Type` correcto.
 - [ ] Descargas (`/admin/compliance/report`, `/admin/billing/invoices`) con `Content-Type` real (PDF/CSV/ZIP) para que el nombre de archivo tenga la extensión correcta.
 - [ ] Revalidar en backend permisos por rol, subida de assets y saneado de SVG.
@@ -441,10 +491,10 @@ Iconos: [`js/ui/icons.js`](js/ui/icons.js), SVG inline de trazo que heredan `cur
 - **Vanilla JS sin build**: cero dependencias, se despliega copiando la carpeta a cualquier hosting estático. Si más adelante se migra a un framework, `api/`, `brand.js`, `tokens.css` y `components.css` se reutilizan tal cual.
 - **Router por hash** para no depender de reescrituras en el servidor.
 - **"Gobernanza, Compliance y Facturación"** (una sola maqueta) se ha separado en dos entradas de menú, *Gobernanza y Compliance* e *Integraciones y Facturación*, porque así aparecen en la sidebar de la maqueta de Resumen Ejecutivo.
-- El pie de la sidebar muestra **Configuración** (consultor), **Cerrar sesión** y, solo en mock, el conmutador de rol. En las maquetas "Configuración" aparecía duplicado arriba y abajo; se ha dejado una sola vez.
+- El pie de la sidebar muestra **Configuración** (consultor) y **Cerrar sesión**. En las maquetas "Configuración" aparecía duplicado arriba y abajo; se ha dejado una sola vez. El conmutador de rol (solo mock) está en la etiqueta "MODO MOCK" abajo a la izquierda.
 - Avatares: si el backend no da foto se muestran **iniciales** (las fotos de las maquetas son de ejemplo).
 - La campana muestra el número de no leídas (en la maqueta del consultor es solo un punto).
-- Textos de las maquetas con errores tipográficos ("Felechas/Acceso total", "Familias Assigned") se han normalizado ("Acceso total", "Familias asignadas").
+- Textos de las maquetas con errores tipográficos ("Felechas/Acceso total", "Familias Assigned", "Chatz de mensenjer", "Selecciona ls su preferencia de preferencia") se han normalizado ("Acceso total", "Familias asignadas", "Chat con <asesor>", "Selecciona tu preferencia de horario").
 
 **Pendiente de definir**
 - Vista de **Plantillas** (no hay maqueta) y edición de plantillas.
@@ -453,3 +503,65 @@ Iconos: [`js/ui/icons.js`](js/ui/icons.js), SVG inline de trazo que heredan `cur
 - Fuente del texto de ejemplo de la **vista previa de marca** (hoy es estático; podría venir del backend como "borradores generados automáticamente").
 - Login / gestión de sesión y pantalla de notificaciones.
 - Internacionalización: textos en español dentro de las vistas; si se necesita multi-idioma, extraerlos a un diccionario.
+
+---
+
+## 15. Área de cliente (web de la familia) en detalle
+
+Maqueta: [`UI_mock/profile_client/UI_cliente.jpeg`](../../UI_mock/profile_client/UI_cliente.jpeg) · Ruta: `#/mi-plan` · Rol: `cliente`.
+
+### 15.1 Layout "client"
+
+A diferencia del panel de consultor/admin, el cliente **no tiene sidebar**: es una web de una sola pantalla pensada para el usuario final.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [logo]  │ Área de Cliente: Familia             Hola Melanie (MW) Melanie Weah 🔔 ⎋ │  ← color primario de marca
+├──────────────────────────────────────┬───────────────────────────────────────┤
+│ Mi Plan y Datos Financieros           │ Centro de Contacto con mi Asesor       │
+│ ┌──────────────┐ ┌──────────────┐    │ ┌ Pedir información o consejos  [on] ┐ │
+│ │ Mi Patrimonio│ │ Meta: curva  │    │ │ Asesor: X · [¿Cómo afecta…?] [...]  │ │
+│ └──────────────┘ └──────────────┘    │ └─────────────────────────────────────┘ │
+│ ┌──────────────┐ ┌──────────────┐    │ ┌ Chat de Asesoría en Vivo  [Abrir] 💬┐ │
+│ │ Miembro      │ │ Meta: barra  │    │ └─────────────────────────────────────┘ │
+│ └──────────────┘ └──────────────┘    │ ┌ Solicitar llamada con X       [on] ┐ │
+│ Añadir Información / Actualizar [on] │ │ [📅 Hoy 16:00 ▾] [Solicitar][Programar]│
+│ ┌ - Añadir info: [__][__][__] [Guardar]│ └─────────────────────────────────────┘ │
+└──────────────────────────────────────┴───────────────────────────────────────┘
+                                                        ┌ Chat con X  _ ✕ ┐  ← ventana flotante
+                                                        └─────────────────┘
+```
+
+- Cabecera (`shell.js → clientLayout`): fondo `--brand-primary`, texto `--brand-primary-contrast` (calculado), logo `logoInverseUrl`/`logoUrl`/wordmark. Muestra nombre del usuario y de la familia (`/me → family.name`), campana de notificaciones y cerrar sesión.
+- Estilos en `css/cliente.css`; todos los colores son variables de marca.
+
+### 15.2 Columna "Mi Plan y Datos Financieros"
+
+- **Tarjetas del plan** (`_plan-cards.js`): renderizado genérico por `type` (ver `PlanCard` en §7.4).
+  - `list` → título + líneas `label: valor` (formatos `money`, `money_k` compacta tipo "$550K", `number`, `percent`). Sirve para *Mi Patrimonio* y para fichas de miembros (*Michael Carter / Timothy Weah: Ahorros/Alquiler, Objetivo vivienda…*).
+  - `goal` + `kind: "trajectory"` → mini-gráfica SVG: área rellena (acento) hasta el progreso actual, punto actual, zona restante en gris y flecha de proyección. Si el backend manda `series` (valores 0–1) se dibuja esa curva; si no, una curva suave genérica.
+  - `goal` + `kind: "progress"` → barra con relleno de acento y la etiqueta (`valueLabel`, p.ej. "18%") a la derecha.
+  - Para añadir otro tipo (p.ej. un donut) basta con una función nueva en `RENDERERS`.
+- **Añadir Información / Actualizar Datos**: los campos (*Mis Nuevos Ingresos, Mis Propiedades, Mis Deudas*) vienen de `GET /client/financial-updates/fields`; *Guardar y Actualizar* envía solo lo rellenado (exige al menos un campo), muestra confirmación y limpia el formulario.
+
+### 15.3 Columna "Centro de Contacto con mi Asesor"
+
+- **Pedir información o consejos**: foto/iniciales y nombre del asesor (`/client/advisor`) y botones de atajo (`/client/quick-topics`). Pulsar un atajo **abre el chat y envía la pregunta** como mensaje con su `topicId`, para que backend pueda clasificarla.
+- **Chat de Asesoría en Vivo**: botón *Abrir chat*. La ventana (`_chat.js`) es flotante (abajo a la derecha), con *minimizar* y *cerrar*:
+  - Carga el historial y hace **polling** cada `CHAT_POLL_MS` con `?after=<último id>`; solo consulta con la ventana abierta y la pestaña visible.
+  - Envío **optimista** (aparece al instante; si falla se marca "No enviado" y se avisa). `Enter` envía, `Shift+Enter` salta de línea.
+  - Mensajes del cliente a la derecha en color de acento; del asesor a la izquierda en gris.
+  - En escritorio (≥ 1100 px) se abre automáticamente al entrar (como en la maqueta); en móvil empieza cerrada.
+  - Para tiempo real con WebSocket/SSE, sustituir `startPolling()` por la suscripción; el resto no cambia.
+- **Solicitar llamada con <nombre del asesor>**: selector de huecos (`/client/call-slots`); *Solicitar llamada* → `{ asap: true }` (que el asesor llame cuanto antes); *Programar Llamada* → `{ slotId }` del hueco elegido.
+
+### 15.4 Interruptores de sección
+
+La maqueta muestra un interruptor en *Añadir Información*, *Pedir información* y *Solicitar llamada*. Se han interpretado como **mostrar/ocultar la sección** (preferencia del cliente para simplificar su pantalla) y se persisten con `GET/PUT /client/preferences`. Si el negocio quiere otro significado (p.ej. "permitir que el asesor me contacte por este canal"), solo cambia la acción en el handler `change` de `mi-plan.js` y el endpoint.
+
+### 15.5 Pendiente / a confirmar con negocio y backend
+
+- Significado definitivo de los interruptores (§15.4).
+- Si el cliente puede ver/editar varias fichas de miembros de la familia, y si "Añadir info" requiere aprobación del consultor antes de reflejarse en el plan.
+- Transporte en tiempo real del chat y notificaciones (polling vs WebSocket/SSE).
+- Moneda y locale por cliente (hoy global en `config.js`: `es-ES` + `USD` → "350.000 US$"; con `en-US` sale "$350,000" como en la maqueta).

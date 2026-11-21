@@ -15,7 +15,7 @@ const enc = encodeURIComponent;
 
 /* ======================== SESIÓN ======================== */
 export const sessionApi = {
-  /** Usuario actual -> { id, name, avatarUrl, role: "consultor"|"admin", tenant: { id, name } } */
+  /** Usuario actual -> { id, name, avatarUrl, role: "consultor"|"admin"|"cliente", tenant: { id, name }, family?: { id, name } } */
   me: () => http.get("/me"),
   logout: () => http.post("/auth/logout"),
 };
@@ -89,6 +89,35 @@ export const consultorApi = {
   /** Reglas de autonomía -> AutonomySettings */
   autonomy: () => http.get("/consultant/settings/autonomy"),
   saveAutonomy: (settings) => http.put("/consultant/settings/autonomy", settings),
+};
+
+/* ======================== CLIENTE (familia) ======================== */
+export const clienteApi = {
+  /** Plan y datos financieros -> { cards: PlanCard[] } (ver README §7.4) */
+  plan: () => http.get("/client/plan"),
+  /** Campos del formulario "Añadir info" -> [{ id, label, placeholder, type }] */
+  updateFields: () => http.get("/client/financial-updates/fields"),
+  /** Envía datos nuevos. payload: { [fieldId]: string } */
+  submitUpdate: (payload) => http.post("/client/financial-updates", payload),
+
+  /** Asesor asignado -> { id, name, avatarUrl, title } */
+  advisor: () => http.get("/client/advisor"),
+  /** Atajos de "Pedir información o consejos" -> [{ id, label, icon }] */
+  quickTopics: () => http.get("/client/quick-topics"),
+
+  /** Mensajes del chat. after: id del último mensaje recibido (para polling) -> ChatMessage[] */
+  messages: ({ after } = {}) => http.get("/client/chat/messages", { query: { after } }),
+  /** Envía mensaje. payload: { text, topicId? } -> ChatMessage */
+  sendMessage: (payload) => http.post("/client/chat/messages", payload),
+
+  /** Huecos disponibles para llamada -> [{ id, label, start }] */
+  callSlots: () => http.get("/client/call-slots"),
+  /** Solicita llamada. payload: { slotId } (programada) o { asap: true } (lo antes posible) */
+  requestCall: (payload) => http.post("/client/call-requests", payload),
+
+  /** Preferencias de la vista (secciones activas) -> { sections: { [id]: boolean } } */
+  preferences: () => http.get("/client/preferences"),
+  savePreferences: (prefs) => http.put("/client/preferences", prefs),
 };
 
 /* ======================== ADMIN ======================== */

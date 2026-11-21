@@ -497,13 +497,15 @@
 }
 .modal__footer { display: flex; justify-content: flex-end; gap: var(--sp-3); }
 
-/* ---------- BANNER DE MODO MOCK ---------- */
+/* ---------- BANNER DE MODO MOCK (solo USE_MOCKS) ---------- */
 .mock-banner {
   position: fixed;
-  left: 50%;
+  left: 12px;
   bottom: 12px;
-  transform: translateX(-50%);
   z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--c-warning-soft);
@@ -511,5 +513,6 @@
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   border: 1px solid var(--c-warning);
-  pointer-events: none;
+  white-space: nowrap;
 }
+.mock-banner button { border: 0; background: none; padding: 0 2px; color: inherit; font-weight: var(--fw-regular); text-decoration: underline; cursor: pointer; }

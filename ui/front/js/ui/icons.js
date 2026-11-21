@@ -44,6 +44,10 @@ const P = {
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
   warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/>',
+  help: '<circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4" stroke="#fff"/><path d="M12 17h.01" stroke="#fff" stroke-width="2.4"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" stroke-width="2.4"/>',
+  minus: '<path d="M5 12h14"/>',
+  chat: '<path d="M14 4H5a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3h1v3l4-3h4a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3z" fill="currentColor"/><path d="M19 9a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-1v3l-4-3h-3a3 3 0 0 1-2.6-1.5" />',
   swap: '<path d="M16 3h5v5"/><path d="M21 3 14 10"/><path d="M8 21H3v-5"/><path d="m3 21 7-7"/>',
 };
 

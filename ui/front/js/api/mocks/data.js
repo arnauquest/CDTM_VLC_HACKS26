@@ -27,6 +27,7 @@ export const voices = [
 export const users = {
   consultor: { id: "u-1", name: "Álex Martín", avatarUrl: null, role: "consultor", tenant: { id: "t-1", name: "CDTM Valencia Hacks 2026" } },
   admin: { id: "u-9", name: "Carlos Mendoza", avatarUrl: null, role: "admin", tenant: { id: "t-1", name: "CDTM Valencia Hacks 2026" } },
+  cliente: { id: "u-20", name: "Melanie Weah", avatarUrl: null, role: "cliente", tenant: { id: "t-1", name: "CDTM Valencia Hacks 2026" }, family: { id: "f-1", name: "Familia Weah" } },
 };
 
 /* ---------------- CONSULTOR ---------------- */
@@ -161,3 +162,55 @@ export const integrations = [
 ];
 
 export const billing = { seatsUsed: 4, seatsTotal: 5, renewalDate: "2026-12-01", planName: "Plan Corporativo" };
+
+/* ---------------- CLIENTE (familia) ---------------- */
+
+/**
+ * El plan se describe como una lista de TARJETAS genéricas: el backend decide
+ * qué tarjetas mostrar y en qué orden, el front solo sabe pintar cada tipo.
+ *   type "list"  -> título + líneas { label, value? }
+ *   type "goal"  -> meta con visualización:
+ *       kind "trajectory": curva de avance (progress 0-1, series opcional)
+ *       kind "progress"  : barra (progress 0-1, valueLabel)
+ */
+export const clientPlan = {
+  cards: [
+    { id: "assets", type: "list", title: "Mi Patrimonio", items: [
+      { label: "Casa", value: 350000, format: "money" },
+      { label: "Efectivo", value: 150000, format: "money" },
+      { label: "Deuda Tarjeta", value: 18000, format: "money" },
+    ] },
+    { id: "goal-retire", type: "goal", kind: "trajectory", title: "Meta: Jubilación 58", caption: "Meta: Jubilación 58", progress: 0.72, series: [0, 0.08, 0.17, 0.27, 0.38, 0.5, 0.61, 0.72] },
+    { id: "member-timothy", type: "list", title: "Timothy Weah", items: [
+      { label: "Ahorros / Alquiler" },
+      { label: "Objetivo Vivienda", value: 550000, format: "money_k" },
+    ] },
+    { id: "goal-card", type: "goal", kind: "progress", title: "Meta: Liquidar tarjeta 18%", caption: "Meta: Liquidar tarjeta 18%", progress: 0.18, valueLabel: "18%" },
+  ],
+};
+
+export const clientUpdateFields = [
+  { id: "income", label: "Mis Nuevos Ingresos", placeholder: "Mis Nuevos Ingresos", type: "text" },
+  { id: "properties", label: "Mis Propiedades", placeholder: "Mis Propiedades", type: "text" },
+  { id: "debts", label: "Mis Deudas", placeholder: "Mis Deudas", type: "text" },
+];
+
+export const clientAdvisor = { id: "c-1", name: "Carlos Mendoza", avatarUrl: null, title: "Senior Advisor" };
+
+export const clientQuickTopics = [
+  { id: "law_reform", label: "¿Cómo afecta la reforma?", icon: "help" },
+  { id: "plan_proposal", label: "Solicitar propuesta de plan", icon: "pencil" },
+];
+
+export const clientMessages = [
+  { id: "m-1", author: "advisor", text: "Hola Melanie, he analizado su caso y le propongo empezar por liquidar la tarjeta: es la deuda más cara.", createdAt: "2026-11-21T09:00:00Z" },
+  { id: "m-2", author: "client", text: "Perfecto, ¿cuándo liquidamos la tarjeta?", createdAt: "2026-11-21T09:05:00Z" },
+];
+
+export const clientCallSlots = [
+  { id: "s-1", label: "Hoy 16:00", start: "2026-11-21T16:00:00Z" },
+  { id: "s-2", label: "Mañana 10:00", start: "2026-11-22T10:00:00Z" },
+  { id: "s-3", label: "Mañana 17:30", start: "2026-11-22T17:30:00Z" },
+];
+
+export const clientPreferences = { sections: { updateData: true, askInfo: true, callRequest: true } };

@@ -47,6 +47,12 @@ export const config = {
   /** Rol simulado en modo mock. */
   MOCK_ROLE: params.get("role") || overrides.MOCK_ROLE || "consultor",
 
+  /**
+   * Cada cuántos ms se piden mensajes nuevos del chat del cliente (polling).
+   * Si backend ofrece WebSocket/SSE, sustituir en views/cliente/_chat.js.
+   */
+  CHAT_POLL_MS: overrides.CHAT_POLL_MS ?? 5000,
+
   /** Locale para formatear números, monedas y fechas. */
   LOCALE: overrides.LOCALE ?? "es-ES",
   CURRENCY: overrides.CURRENCY ?? "USD",

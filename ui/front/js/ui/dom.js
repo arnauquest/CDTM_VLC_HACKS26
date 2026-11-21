@@ -88,6 +88,8 @@ export const fmt = {
   number: (n) => (n == null ? "—" : new Intl.NumberFormat(config.LOCALE).format(n)),
   percent: (ratio) => (ratio == null ? "—" : `${Math.round(ratio * 100)}%`),
   minutes: (m) => (m == null ? "—" : `${new Intl.NumberFormat(config.LOCALE, { maximumFractionDigits: 1 }).format(m)} min`),
+  /** Moneda compacta: 550000 -> "550 mil US$" / "$550K" según locale. */
+  moneyCompact: (n) => (n == null ? "—" : new Intl.NumberFormat(config.LOCALE, { style: "currency", currency: config.CURRENCY, notation: "compact", maximumFractionDigits: 1 }).format(n)),
   money: (n) => (n == null ? "—" : new Intl.NumberFormat(config.LOCALE, { style: "currency", currency: config.CURRENCY, maximumFractionDigits: 0 }).format(n)),
   date: (iso) => (iso ? new Intl.DateTimeFormat(config.LOCALE, { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso)) : "—"),
   relative: (iso) => {

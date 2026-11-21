@@ -20,7 +20,7 @@ const routes = [
   ["POST /brand/assets", ({ formData }) => ({ url: URL.createObjectURL(formData.get("file")) })],
   ["GET /brand/voices", () => db.voices],
 
-  ["GET /notifications/count", () => ({ unread: config.MOCK_ROLE === "admin" ? db.adminSummary.unreadNotifications : 3 })],
+  ["GET /notifications/count", () => ({ unread: { admin: db.adminSummary.unreadNotifications, cliente: 1 }[config.MOCK_ROLE] ?? 3 })],
 
   ["GET /consultant/dashboard", () => db.consultantDashboard],
   ["GET /alerts/categories", () => db.alertCategories],
@@ -50,6 +50,27 @@ const routes = [
   ["GET /templates", () => db.templates],
   ["GET /consultant/settings/autonomy", () => db.autonomy],
   ["PUT /consultant/settings/autonomy", ({ body }) => body],
+
+  ["GET /client/plan", () => db.clientPlan],
+  ["GET /client/financial-updates/fields", () => db.clientUpdateFields],
+  ["POST /client/financial-updates", () => ({ ok: true })],
+  ["GET /client/advisor", () => db.clientAdvisor],
+  ["GET /client/quick-topics", () => db.clientQuickTopics],
+  ["GET /client/chat/messages", ({ query }) => {
+    const i = query?.after ? db.clientMessages.findIndex((m) => m.id === query.after) : -1;
+    return db.clientMessages.slice(i + 1);
+  }],
+  ["POST /client/chat/messages", ({ body }) => {
+    const msg = { id: `m-${Date.now()}`, author: "client", text: body.text, createdAt: new Date().toISOString() };
+    db.clientMessages.push(msg);
+    // Simula respuesta del asesor para poder ver el polling funcionando.
+    setTimeout(() => db.clientMessages.push({ id: `m-${Date.now()}-r`, author: "advisor", text: "¡Recibido! Lo reviso y te respondo en breve.", createdAt: new Date().toISOString() }), 2500);
+    return msg;
+  }],
+  ["GET /client/call-slots", () => db.clientCallSlots],
+  ["POST /client/call-requests", ({ body }) => ({ ok: true, ...body })],
+  ["GET /client/preferences", () => db.clientPreferences],
+  ["PUT /client/preferences", ({ body }) => Object.assign(db.clientPreferences, body)],
 
   ["GET /admin/summary", () => db.adminSummary],
   ["GET /admin/consultants/workload", ({ query }) => {
