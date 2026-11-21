@@ -1,0 +1,16 @@
+{
+  "name": "sherpas-local-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env backend/server.mjs",
+    "test": "node --test config/*.test.mjs backend/*.test.mjs",
+    "check:live": "node --env-file=.env scripts/check-live.mjs",
+    "check:flow": "node --env-file=.env scripts/check-flow.mjs",
+    "check:relevance": "node --env-file=.env scripts/check-relevance.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
