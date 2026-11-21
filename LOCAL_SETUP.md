@@ -10,6 +10,8 @@ Working branch: `codex/local-setup`. Keep frontend integration and subsequent im
 
 Edit the ignored `.env` file locally. Set `OPENAI_API_KEY` first for Decisions and API-based conversation models. Codex is already signed in with ChatGPT on this Mac and uses that subscription session separately.
 
+Set `OPENAI_API_KEY_FALLBACK` for the secondary account/project. The team confirmed the keys use separate projects and accounts. The connection utility in `config/openai-failover.mjs` provides temporary-rate-limit failover, shared cooldown state and bounded attempts. See [routing configuration](config/OPENAI_ROUTING.md). The product endpoints will call this utility when implemented.
+
 Set `ELEVENLABS_API_KEY` for voice. Choose the agent and voice after the first account access check. Acoustic tone analysis has no selected provider yet: `VOICE_ANALYSIS_PROVIDER=none` and an empty model. The future backend must expose that status and continue analysis from transcript, context and self-report. The supplied Sherpas case files work without an MCP token.
 
 - OpenAI API keys: https://platform.openai.com/api-keys
