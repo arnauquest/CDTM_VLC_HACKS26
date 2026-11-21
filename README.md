@@ -8,11 +8,11 @@ Our prototype connects those steps. It evaluates events for each family, prepare
 
 Built for **CDTM Valencia Hacks 2026**, addressing Sherpas' **“First to know, first to tell”** challenge, with ElevenLabs powering the voice experience. The intended business value is **more personal attention per advisor**. We demonstrate the automation that could enable that capacity, without claiming an unmeasured percentage of time saved or improved retention.
 
-The product frontend from `origin/feat/ui-front` is now connected to this local backend on the integration branch `codex/local-setup`. Open [the application](http://127.0.0.1:3000/app/); [operational diagnostics](http://127.0.0.1:3000/ops) remain available separately. The existing frontend layout and visual design are retained. Integration history and implementation boundaries are recorded in [INTEGRATION.md](INTEGRATION.md).
+The product frontend from `origin/feat/ui-front` is now connected to this local backend on the published `main` branch. Open [the application](http://127.0.0.1:3000/app/); [operational diagnostics](http://127.0.0.1:3000/ops) remain available separately. The existing frontend layout and visual design are retained. Integration history and implementation boundaries are recorded in [INTEGRATION.md](INTEGRATION.md).
 
 ## Hackathon submission
 
-**Complete integrated version: [`codex/local-setup`](https://github.com/arnauquest/CDTM_VLC_HACKS26/tree/codex/local-setup).** The separate `feat/ui-front` branch is the original frontend workspace.
+**Complete hackathon submission: [`main`](https://github.com/arnauquest/CDTM_VLC_HACKS26/tree/main).** Code, demo video, pitch deck and technical documentation are published together here. `codex/local-setup` retains the integration history; `feat/ui-front` remains the separate frontend workspace.
 
 - [Demo video — 2:35, 1080p, with narration and real browser conversation audio](deliverables/sherpas-demo.mp4) (use **View raw / Download raw file** if GitHub does not show a player).
 - [Final pitch deck](deliverables/Sherpas-Pitch-Final.pptx): starts with a blank background; the next advance shows the phone notification with embedded sound. The final personalized voice clip is also embedded.
@@ -26,7 +26,7 @@ The demo uses the four official synthetic families. External news is simulated a
 Use Node.js 22.13 or newer. The backend uses Node's built-in SQLite and has no npm package dependencies.
 
 ```sh
-git clone --branch codex/local-setup https://github.com/arnauquest/CDTM_VLC_HACKS26.git
+git clone --branch main https://github.com/arnauquest/CDTM_VLC_HACKS26.git
 cd CDTM_VLC_HACKS26
 git clone https://github.com/SherpasEngineering/hackathon-cdtm-vlc-hacks-2026.git ../sherpas-official-cases
 # Preserve an existing .env:
