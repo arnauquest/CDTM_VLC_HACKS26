@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cargando…</title>
+  <!-- Favicon por defecto: js/brand.js lo sustituye por brand.iconUrl -->
+  <link rel="icon" href="assets/brand/favicon.svg" />
+
+  <!-- Fuente por defecto. La fuente de marca (brand.fontUrl) se inyecta en runtime. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/views.css" />
+
+  <!--
+    Configuración de entorno opcional (sin tocar código). Ejemplo producción:
+    <script>
+      window.__APP_CONFIG__ = { API_BASE_URL: "https://api.midominio.com/api", USE_MOCKS: false };
+    </script>
+  -->
+</head>
+<body>
+  <div id="root" aria-live="polite"></div>
+  <noscript>Esta aplicación necesita JavaScript.</noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

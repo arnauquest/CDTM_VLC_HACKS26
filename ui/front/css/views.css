@@ -1,0 +1,143 @@
+/* =========================================================================
+   ESTILOS ESPECÍFICOS DE VISTA
+   ========================================================================= */
+
+/* ---------- LOGO / WORDMARK (variable) ---------- */
+.wordmark {
+  font-family: var(--brand-wordmark-font);
+  font-weight: 800;
+  font-size: 2.6rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--brand-primary);
+}
+.wordmark--sm { font-size: 1.1rem; }
+.wordmark--md { font-size: 2.6rem; }
+.brand-logo { max-height: 56px; max-width: 200px; object-fit: contain; }
+.brand-logo--sm { max-height: 28px; }
+.brand-suffix { font-weight: var(--fw-semibold); color: var(--c-text-muted); font-size: var(--fs-xl); align-self: flex-end; margin-top: -6px; }
+.brand-tenant { font-size: var(--fs-sm); color: var(--c-text); }
+
+/* ---------- CONSULTOR · FEED DE ALERTAS ---------- */
+.alert-row .list-row__subtitle { font-size: var(--fs-lg); }
+
+/* ---------- CONSULTOR · FAMILIAS ---------- */
+.family-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: var(--sp-5); }
+.family-card { display: flex; flex-direction: column; gap: var(--sp-5); }
+.family-card__head { display: flex; gap: var(--sp-5); }
+.family-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-lg); }
+.family-card__name { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.family-card__name h4 { font-size: var(--fs-xl); color: var(--c-text); flex: 1; min-width: 0; }
+.family-card__goal { margin-top: var(--sp-2); }
+.family-card__actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-top: auto; }
+.family-card__actions .btn { min-height: 52px; font-size: var(--fs-lg); }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); }
+.toolbar .chips { margin-left: auto; }
+
+/* ---------- CONSULTOR · DETALLE ALERTA ---------- */
+.detail-topbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+.detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--c-border); }
+.detail-head h1 { font-size: var(--fs-3xl); flex: 1 1 auto; }
+.detail-title { text-align: center; font-size: var(--fs-2xl); }
+
+.channel { display: flex; flex-direction: column; gap: var(--sp-4); }
+.channel__head { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.channel__head h3 { flex: 1; font-size: var(--fs-2xl); color: var(--c-text); }
+.channel__head svg { width: 34px; height: 34px; color: var(--brand-primary); flex: none; }
+.channel__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); color: var(--c-text-muted); margin-top: -8px; }
+.channel__footer { margin-top: auto; padding-top: var(--sp-4); border-top: 1px solid var(--c-border); }
+
+.email-envelope { border: 1px solid var(--c-border); border-radius: var(--radius-sm); }
+.email-envelope__row { display: flex; align-items: baseline; gap: var(--sp-4); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-lg); }
+.email-envelope__row + .email-envelope__row { border-top: 1px solid var(--c-border); }
+.email-envelope__key { flex: none; width: 72px; }
+.email-envelope__val { flex: 1; }
+.email-body { font-size: var(--fs-lg); display: flex; flex-direction: column; gap: var(--sp-3); padding: 0 var(--sp-3); max-height: 460px; overflow: auto; }
+.email-body[contenteditable="true"] { outline: 2px solid var(--brand-accent); border-radius: var(--radius-sm); padding: var(--sp-3); }
+
+/* ---------- CONSULTOR · CONFIGURACIÓN ---------- */
+.settings-card h3 { font-size: var(--fs-xl); color: var(--c-text); margin-bottom: var(--sp-4); }
+.integration-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); }
+.integration-status__text { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-lg); }
+
+/* ---------- ADMIN · BALANCEO DE CARGA ---------- */
+.workload-row { display: grid; grid-template-columns: minmax(240px, 1.1fr) minmax(220px, 1fr) auto minmax(110px, auto) auto; align-items: center; gap: var(--sp-5); }
+.workload-row__who { display: flex; align-items: center; gap: var(--sp-4); }
+.workload-row__metric { display: flex; flex-direction: column; gap: 4px; padding-left: var(--sp-5); border-left: 1px solid var(--c-border); }
+.workload-row__metric--plain { border-left: 0; padding-left: 0; }
+.workload-row__metric .k { color: var(--c-text-muted); font-size: var(--fs-md); }
+.workload-row__metric .v { font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--c-text); line-height: 1.1; }
+.workload-row__metric .v small { font-weight: var(--fw-regular); }
+.v--ok { color: var(--brand-accent-strong) !important; }
+.v--over { color: var(--c-danger-text) !important; }
+.v--warn-pill { display: inline-block; padding: 0 10px; border-radius: var(--radius-sm); background: var(--c-warning-soft); color: var(--c-warning-text) !important; }
+
+/* ---------- ADMIN · USUARIOS Y ROLES ---------- */
+.onboarding-toggle { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-5); max-width: 640px; }
+.onboarding-toggle__text { font-size: var(--fs-xl); line-height: 1.25; }
+.team-row { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(160px, 1fr) minmax(180px, 1fr) auto; align-items: center; gap: var(--sp-5); }
+.team-row__who { display: flex; align-items: center; gap: var(--sp-4); }
+
+/* ---------- ADMIN · IMAGEN DE MARCA ---------- */
+.brand-editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-6); align-items: start; }
+.brand-editor__col { display: flex; flex-direction: column; gap: var(--sp-4); }
+.brand-editor__colhead { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); justify-content: space-between; }
+.brand-editor__colhead h2 { font-size: var(--fs-2xl); color: var(--c-text); }
+.brand-form { display: flex; flex-direction: column; gap: var(--sp-5); }
+.brand-form h4 { font-size: var(--fs-xl); color: var(--c-text); }
+.brand-form .field__label { font-size: var(--fs-lg); }
+
+.preview-frame { border: 1px solid var(--c-border); border-radius: var(--radius-md); background: var(--c-surface-muted); overflow: hidden; }
+.preview-body { padding: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-5); align-items: center; }
+
+/* Email de previsualización: usa variables --pv-* para no contaminar la app
+   mientras el admin edita colores que aún no ha publicado. */
+.pv-email { width: min(100%, 420px); background: #fff; border: 1px solid var(--c-border); border-radius: var(--radius-md); overflow: hidden; }
+.pv-email__logo { display: grid; place-items: center; padding: var(--sp-6) var(--sp-4) var(--sp-4); min-height: 96px; }
+.pv-email__logo .wordmark { color: var(--pv-primary); }
+.pv-email__bar { height: 22px; background: var(--pv-primary); }
+.pv-email__content { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); align-items: center; }
+.pv-email__cta { padding: 10px 28px; border-radius: var(--radius-pill); background: var(--pv-accent); color: #fff; font-size: var(--fs-lg); font-weight: var(--fw-medium); }
+.pv-email__text { align-self: stretch; font-size: var(--fs-md); }
+.pv-email__footer { padding: var(--sp-4); background: var(--c-surface-muted); font-size: var(--fs-xs); color: var(--c-text-muted); text-align: center; white-space: pre-wrap; }
+
+.pv-push { width: min(100%, 400px); display: flex; gap: var(--sp-3); padding: var(--sp-3); background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-pop); }
+.pv-push__icon { flex: none; width: 56px; height: 56px; border-radius: 12px; background: var(--c-surface-muted); display: grid; place-items: center; overflow: hidden; }
+.pv-push__icon img { width: 100%; height: 100%; object-fit: contain; }
+.pv-push__icon .wordmark { color: var(--pv-primary); font-size: 0.8rem; }
+.pv-push__title { font-weight: var(--fw-bold); }
+
+/* ---------- ADMIN · COMPLIANCE / INTEGRACIONES ---------- */
+.guardrails { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-6); }
+.guardrails .setting__label { font-size: var(--fs-lg); line-height: 1.25; }
+.guardrails .setting__hint { font-size: var(--fs-md); color: var(--c-text-muted); }
+.integration-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+.integration-item { display: grid; grid-template-columns: minmax(200px, 260px) auto 1fr auto; align-items: center; gap: var(--sp-4); font-size: var(--fs-lg); min-height: 48px; }
+.billing { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6); }
+.billing__usage { flex: 1; min-width: 280px; max-width: 520px; display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-lg); }
+.billing__actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+
+/* ---------- RESPONSIVE VISTAS ---------- */
+@media (max-width: 1280px) {
+  .workload-row { grid-template-columns: minmax(200px, 1fr) minmax(200px, 1fr) auto; }
+  .workload-row .list-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .team-row { grid-template-columns: 1fr 1fr; }
+  .team-row .list-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+@media (max-width: 1100px) {
+  .brand-editor { grid-template-columns: minmax(0, 1fr); }
+  .guardrails { grid-template-columns: minmax(0, 1fr); }
+  .family-grid { grid-template-columns: minmax(0, 1fr); }
+  .list-row { flex-wrap: wrap; }
+  .list-row__actions { width: 100%; justify-content: flex-start; }
+  .integration-item { grid-template-columns: 1fr auto; }
+}
+@media (max-width: 640px) {
+  .workload-row, .team-row { grid-template-columns: 1fr; }
+  .workload-row__metric { border-left: 0; padding-left: 0; }
+  .family-card__actions { grid-template-columns: 1fr; }
+  .stepper { flex-direction: column; }
+  .stepper__done { flex-direction: column; }
+  .step__arrow { display: none; }
+}
